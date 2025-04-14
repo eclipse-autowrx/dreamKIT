@@ -1,0 +1,93 @@
+Vehicle:
+  type: branch
+  description: ''
+Vehicle.SwUpdate:
+  type: branch
+  description: ''
+Vehicle.SwUpdate.Fota:
+  type: branch
+  description: ''
+Vehicle.SwUpdate.XipHost:
+  type: branch
+  description: ''
+Vehicle.SwUpdate.Xip:
+  type: branch
+  description: ''
+Vehicle.SwUpdate.Vip:
+  type: branch
+  description: ''
+  
+Vehicle.SwUpdate.UpdateTrigger:
+  type: actuator
+  description: ''
+  datatype: boolean
+Vehicle.SwUpdate.PatchUpdateTrigger:
+  type: actuator
+  description: ''
+  datatype: boolean
+Vehicle.SwUpdate.Fota.UpdateTrigger:
+  type: actuator
+  description: ''
+  datatype: boolean
+Vehicle.SwUpdate.XipHost.UpdateTrigger:
+  type: actuator
+  description: ''
+  datatype: boolean
+
+Vehicle.SwUpdate.IsNewUpdateAvailable:
+  type: sensor
+  description: ''
+  datatype: boolean  
+Vehicle.SwUpdate.CurrentVersion:
+  type: sensor
+  description: ''
+  datatype: string
+Vehicle.SwUpdate.CurrentDescription:
+  type: sensor
+  description: ''
+  datatype: string
+Vehicle.SwUpdate.TargetVersion:
+  type: sensor
+  description: ''
+  datatype: string
+Vehicle.SwUpdate.TargetDescription:
+  type: sensor
+  description: ''
+  datatype: string
+Vehicle.SwUpdate.Status:
+  type: sensor
+  description: 'Value: 0-Idle, 1-Downloading, 2-Installing, 3-Verifying, 4-ReadyForActivation, 5-Activated. 6-RollingBack, 7-Failed'
+  datatype: uint8
+Vehicle.SwUpdate.PercentageDone:
+  type: sensor
+  description: ''
+  datatype: uint8
+Vehicle.SwUpdate.StatusDescription:
+  type: sensor
+  description: ''
+  datatype: string
+Vehicle.SwUpdate.ErrorCode:
+  type: sensor
+  description: ''
+  datatype: string
+Vehicle.SwUpdate.ErrorCodeDescription:
+  type: sensor
+  description: ''
+  datatype: string
+Vehicle.SwUpdate.Fota.PercentageDone:
+  type: sensor
+  description: ''
+  datatype: uint8
+Vehicle.SwUpdate.XipHost.PercentageDone:
+  type: sensor
+  description: ''
+  datatype: uint8
+Vehicle.SwUpdate.Xip.PercentageDone:
+  type: sensor
+  description: ''
+  datatype: uint8
+Vehicle.SwUpdate.Vip.PercentageDone:
+  type: sensor
+  description: ''
+  datatype: uint8
+ 

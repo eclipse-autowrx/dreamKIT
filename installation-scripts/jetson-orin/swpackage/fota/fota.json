@@ -1,0 +1,37 @@
+{
+    "ECU": [
+      {
+        "name" : "EngineEcu",
+        "comType": "CAN",
+        "channel": "0x3",
+        "reqToEcuID": "0x740",
+        "resFromEcuID": "0x748",
+        "pathToSblBin": "./fota/EngineEcu/EngineEcu_Sbl_v1.bin",
+        "sblStartAddr": "0x70102000",
+        "pathToAppBin": "./fota/EngineEcu/EngineEcu_App_signed_v1.bin",
+        "appStartAddr": "0x80040000",
+        "pathToCalBin": "./fota/EngineEcu/EngineEcu_Cal_v1.bin",
+        "calStartAddr": "0x801C0000",
+        "pathToReproSeq": "../../ReproSeq_EngineEcu/Debug/libReproSeq_EngineEcu.so",
+        "pathToSecCheck": "",
+        "ecuSwVer": "EngineEcu_v1"
+      },
+      {
+        "name" : "UltrasonicEcu",
+        "comType": "CAN",
+        "channel": "0x2",
+        "reqToEcuID": "0x5A4",
+        "resFromEcuID": "0x5AC",
+        "pathToSblBin": "",
+        "sblStartAddr": "0x00000000",
+        "pathToAppBin": "./fota/UltrasonicEcu/S11L_APP_nonXCP.bin",
+        "appStartAddr": "0x01000020",
+        "pathToCalBin": "./fota/UltrasonicEcu/S11L_CAL_nonXCP.bin",
+        "calStartAddr": "0x00FC8020",
+        "pathToReproSeq": "../../ReproSeq_UltrasonicEcu/Debug/libReproSeq_UltrasonicEcu.so",
+        "pathToSecCheck": "",
+        "ecuSwVer": "UltrasonicEcu_v1"
+      }
+    ]
+  }
+  
