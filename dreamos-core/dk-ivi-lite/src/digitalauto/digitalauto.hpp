@@ -12,10 +12,8 @@ typedef struct {
     QString appId;
     QString name;
     QString lastDeploy;
-//    QString noofdownload;
-//    QString iconPath;
-//    QString foldername;
-//    QString packagelink;
+    QString deployFrom="digital.auto";
+    QString execType="py";
     bool isSubscribed = false;
 } DigitalAutoAppListStruct;
 

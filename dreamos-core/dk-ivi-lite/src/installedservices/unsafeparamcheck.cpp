@@ -171,12 +171,15 @@ QString getAudioParam(QString runtimecfgFile) {
     }
     QJsonObject jsonConfig = jsonDoc.object();
 
+    QString dkUsername = qgetenv("DK_USER");
+    QString rootHomeDir = "/home/" + dkUsername;
+
     // Build the safe Docker command
     // Process "run_params" field
     if (jsonConfig.contains("audio_params")) {
         QString runParams = jsonConfig["audio_params"].toString();
         if (runParams == "yes") {
-            QString audioParams = " --device /dev/snd --group-add audio -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native -v $HOME_DIR/.config/pulse/cookie:/root/.config/pulse/cookie ";
+            QString audioParams = " --device /dev/snd --group-add audio -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native -v " + rootHomeDir + "/.config/pulse/cookie:/root/.config/pulse/cookie ";
             qDebug() << "audio_params : " << audioParams;
             return audioParams;
         }
@@ -220,6 +223,39 @@ QString getUiParam(QString runtimecfgFile) {
     }
 
     qDebug() << "uiParams : isn't defined.";
+    return "";
+}
+
+QString getSpecialParam(QString runtimecfgFile) {
+    // Load JSON configuration
+    QFile file(runtimecfgFile);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning("Couldn't open runtimecfgFile file.");
+        return "";
+    }
+
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(file.readAll());
+    if (jsonDoc.isNull()) {
+        qWarning("Invalid JSON format.");
+        return "";
+    }
+    QJsonObject jsonConfig = jsonDoc.object();
+
+    // Build the safe Docker command
+    // Process "run_params" field
+    if (jsonConfig.contains("special_params")) {
+        QString runParams = jsonConfig["special_params"].toString();
+        if (runParams == "network_bypass") {
+            QString specialParams = " --network host ";
+            qDebug() << "specialParams : " << specialParams;
+            return specialParams;
+        }
+        else {
+            qDebug() << "specialParams : " << runParams;
+        }
+    }
+
+    qDebug() << "specialParams : isn't defined.";
     return "";
 }
 

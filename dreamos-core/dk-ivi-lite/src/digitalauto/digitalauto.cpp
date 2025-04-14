@@ -238,6 +238,16 @@ Q_INVOKABLE void DigitalAutoAppAsync::initSubscribeAppFromDB()
         for (const auto obj : jsonAppList) {
             DigitalAutoAppListStruct appInfo;
 
+            if (QJsonValue::Undefined != obj.toObject().value("deployFrom").type())
+            {
+                appInfo.deployFrom = obj.toObject().value("deployFrom").toString();
+            }
+
+            if (QJsonValue::Undefined != obj.toObject().value("execType").type())
+            {
+                appInfo.execType = obj.toObject().value("execType").toString();
+            }
+
 //            qDebug() << obj.toObject().value("name").toString();
             appInfo.name = obj.toObject().value("name").toString();
 
@@ -356,11 +366,34 @@ Q_INVOKABLE void DigitalAutoAppAsync::executeApp(const QString name, const QStri
             system(cmd.toUtf8()); 
         }
 
+        QString execType_;
+        int len = m_appListInfo.size();
+        for (int i = 0; i < len; i++)
+        {
+            if (m_appListInfo[i].appId == appId)
+            {
+                execType_ = m_appListInfo[i].execType;
+                break;
+            }
+        }
+
         // QString cmd;
         cmd = "";
 
-        // start digital.auto app
-        cmd += "docker kill " + appId + ";docker rm " + appId + ";docker run -d -it --name " + appId + " --log-opt max-size=10m --log-opt max-file=3 -v /home/" + DK_VCU_USERNAME + "/.dk/dk_vssgeneration/vehicle_gen/:/home/vss/vehicle_gen:ro -v /home/" + DK_VCU_USERNAME + "/.dk/dk_app_python_template/target/" + DK_ARCH + "/python-packages:/home/python-packages:ro --network dk_network -v /home/" + DK_VCU_USERNAME + "/.dk/dk_manager/prototypes/" + appId + ":/app/exec " + DK_DOCKER_HUB_NAMESPACE + "/dk_app_python_template:baseimage";
+        if (execType_ == "py")
+        {
+            // start py app
+            cmd += "docker kill " + appId + ";docker rm " + appId + ";docker run -d -it --network dk_network --name " + appId + " --log-opt max-size=10m --log-opt max-file=3 -v /home/" + DK_VCU_USERNAME + "/.dk/dk_vssgeneration/vehicle_gen/:/home/vss/vehicle_gen:ro -v /home/" + DK_VCU_USERNAME + "/.dk/dk_app_python_template/target/" + DK_ARCH + "/python-packages:/home/python-packages:ro -v /home/" + DK_VCU_USERNAME + "/.dk/dk_manager/prototypes/" + appId + ":/app/exec " + DK_DOCKER_HUB_NAMESPACE + "/dk_app_python_template:baseimage";
+        }
+        else if (execType_ == "cpp")
+        {
+            // start cpp app
+            cmd += "docker kill " + appId + ";docker rm " + appId + ";docker run -d -it --network dk_network --name " + appId + " --log-opt max-size=10m --log-opt max-file=3 -v /home/" + DK_VCU_USERNAME + "/.dk/dk_app_cpp_template/target/" + DK_ARCH + "/cpp:/app/lib:ro -v /home/" + DK_VCU_USERNAME + "/.dk/dk_manager/prototypes/" + appId + ":/app/exec " + DK_DOCKER_HUB_NAMESPACE + "/dk_app_cpp_template:latest";
+        }
+        else {
+            qDebug() << "execType " << execType_ << " is not supported !!!";
+        }
+        
         qDebug() << cmd;
         system(cmd.toUtf8());
 

@@ -251,8 +251,15 @@ Q_INVOKABLE void VappsAsync::executeServices(int appIdx, const QString name, con
         QString audioParams = getAudioParam(runtimecfgfile);
         QString uiParams = getUiParam(runtimecfgfile);
 
+        QString network_params = " --network dk_network ";
+        QString specialParams = getSpecialParam(runtimecfgfile);
+        if(specialParams.contains("--network host")) {
+            network_params.clear();
+            network_params = specialParams;
+        }
+
         // start digital.auto app
-        cmd += "docker kill " + appId + ";docker rm " + appId + ";docker run -d -it --name " + appId + " --log-opt max-size=10m --log-opt max-file=3 -v /home/" + DK_VCU_USERNAME + "/.dk/dk_installedapps/" + appId + ":/app/runtime -v /home/" + DK_VCU_USERNAME + "/.dk/dk_vssgeneration/vehicle_gen:/home/vss/vehicle_gen:ro --network dk_network " + safeParams + audioParams + uiParams + installedVappsList[appIdx].packagelink;
+        cmd += "docker kill " + appId + ";docker rm " + appId + ";docker run -d -it --name " + appId + " --log-opt max-size=10m --log-opt max-file=3 -v /home/" + DK_VCU_USERNAME + "/.dk/dk_installedapps/" + appId + ":/app/runtime -v /home/" + DK_VCU_USERNAME + "/.dk/dk_vssgeneration/vehicle_gen:/home/vss/vehicle_gen:ro " + network_params + safeParams + audioParams + uiParams + installedVappsList[appIdx].packagelink;
         qDebug() << cmd;
         system(cmd.toUtf8());
 

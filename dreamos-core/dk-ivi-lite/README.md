@@ -1,9 +1,9 @@
-# dk_app_python_template
+# dk_ivi_dev
 
-> Info: This repo provides a guideline to build image for dk_manager app. dk_manager is the core app to manage the operation of dreamkit system.
+> Info: This repo provides a guideline to build image for dk_ivi app. dk_ivi is a simple In-Vehicle Infotainment System UI app for User Interaction with dreamKIT system.
 
 ## Prerequisites:
-Install dk_manager
+Install dreamOS without dk_ivi (related to \installation-scripts\jetson-orin\dk_install.sh script)
 
 ## Build docker image
 Local-arch build:  
@@ -47,6 +47,7 @@ export DK_USER=$USER
 export DK_DOCKER_HUB_NAMESPACE="phongbosch"
 export DK_ARCH="amd64"
 export DK_CONTAINER_ROOT=~/.dk/
+sudo -E ./dk_ivi
 
 // export to run with docker container
 export DKCODE="dreamKIT"

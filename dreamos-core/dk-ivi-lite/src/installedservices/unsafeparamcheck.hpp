@@ -6,5 +6,6 @@
 QString getSafeDockerParam(QString runtimecfgFile);
 QString getAudioParam(QString runtimecfgFile);
 QString getUiParam(QString runtimecfgFile);
+QString getSpecialParam(QString runtimecfgFile);
 
 #endif //UNSAFEPARAMCHECK_H
