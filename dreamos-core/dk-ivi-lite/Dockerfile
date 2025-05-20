@@ -24,6 +24,9 @@ RUN mkdir /app/build && cd /app/build && \
 # ========================
 FROM ubuntu:24.04
 
+# Define the build argument for the target architecture
+ARG TARGETARCH
+
 WORKDIR /app
 
 RUN apt-get update && \
@@ -41,8 +44,10 @@ RUN apt-get update && \
 COPY --from=builder /app/build/dk_ivi /app/exec/
 
 COPY start.sh /app/
+COPY ./src/library/target/${TARGETARCH} /app/exec/library
+
 RUN chmod +x /app/start.sh
 
-ENV LD_LIBRARY_PATH=/app/exec
+ENV LD_LIBRARY_PATH=/app/exec/library
 
 CMD ["/app/start.sh"]

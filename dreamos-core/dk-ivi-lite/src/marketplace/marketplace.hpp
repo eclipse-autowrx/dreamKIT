@@ -5,6 +5,7 @@
 #include <QTextStream>
 #include <QFile>
 #include <QDebug>
+#include <QTimer>
 // #include <appstore/appstore.hpp>
 
 // Structure to store marketplace information
@@ -38,21 +39,15 @@ typedef struct {
     QString iconPath;
 } InstalledAppListStruct;
 
-class AppAsync: public QObject
+class MarketplaceAsync: public QObject
 {
     Q_OBJECT
 public:
-    AppAsync();
+    MarketplaceAsync();
 
-    Q_INVOKABLE void initInstalledAppFromDB();
     Q_INVOKABLE void initMarketplaceListFromDB();
+    
     Q_INVOKABLE void setCurrentMarketPlaceIdx(int idx);
-
-    Q_INVOKABLE void runCmd(const QString appName, const QString input);
-
-    Q_INVOKABLE void executeApp(const int index);
-
-    Q_INVOKABLE void removeApp(const int index);
 
     Q_INVOKABLE void installApp(const int index);
 
@@ -70,13 +65,18 @@ Q_SIGNALS:
 
     void clearMarketplaceNameList();
     void appendMarketplaceUrlList(QString name);
+    void setInstallServiceRunningStatus(bool status);
+
+public Q_SLOTS:
+    void checkInstallServiceIsRunning();
 
 private:
-    QList<InstalledAppListStruct> installedAppList;
-    QList<AppListStruct> searchedAppList;
+    QList<InstalledAppListStruct> m_installedAppList;
+    QList<AppListStruct> m_searchedAppList;
     QList<MarketplaceInfo> m_marketplaceList;
     int m_current_idx = 0;
     QString m_current_searchname = "";
+    QTimer *m_timer_installservice_runningcheck;
 
     QList<MarketplaceInfo> parseMarketplaceFile(const QString &filePath);
     void appstore_readAppList(const QString searchName, QList<AppListStruct> &AppListInfo);

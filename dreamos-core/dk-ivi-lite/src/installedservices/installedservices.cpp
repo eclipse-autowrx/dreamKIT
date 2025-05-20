@@ -59,10 +59,10 @@ void InstalledServicesCheckThread::run()
             QString raw = in.readAll();
             qDebug() << "reprint docker ps: \n" << raw;
             if (raw.contains(m_appId, Qt::CaseSensitivity::CaseSensitive)) {
-                emit resultReady(m_appId, true, "<b>"+m_appName+"</b>" + " is started successfully.");
+                Q_EMIT resultReady(m_appId, true, "<b>"+m_appName+"</b>" + " is started successfully.");
             }
             else {
-                emit resultReady(m_appId, false, "<b>"+m_appName+"</b>" + " is NOT started successfully.<br><br>Please contact the car OEM for more information !!!");
+                Q_EMIT resultReady(m_appId, false, "<b>"+m_appName+"</b>" + " is NOT started successfully.<br><br>Please contact the car OEM for more information !!!");
             }
             cmd = "> " + dockerps;
             system(cmd.toUtf8()); 

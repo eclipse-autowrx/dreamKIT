@@ -31,7 +31,7 @@ public:
     void run();
     void triggerCheckAppStart(QString id, QString name);
 
-signals:
+Q_SIGNALS:
     void resultReady(QString appId, bool isStarted, QString msg);
 
 private:
@@ -57,7 +57,7 @@ public:
     Q_INVOKABLE void openAppEditor(int idx);
 
 
-signals:
+Q_SIGNALS:
     void appendAppInfoToAppList(QString name, QString appId, bool isSubscribed);
     void updateStartAppMsg(QString appId, bool isStarted, QString msg);
     void updateAppRunningSts(QString appId, bool isStarted, int idx);
@@ -66,7 +66,7 @@ signals:
     void setProgressVisibility(bool visible);
     void updateBoardSerialNumber(QString serial);
 
-public slots:
+public Q_SLOTS:
     void handleResults(QString appId, bool isStarted, QString msg);
     void fileChanged(const QString& path);
     void updateDeploymentProgress();

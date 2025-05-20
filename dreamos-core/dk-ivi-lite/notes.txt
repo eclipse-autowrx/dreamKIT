@@ -1,8 +1,0 @@
-export DISPLAY=:0.0
-export QML2_IMPORT_PATH=/usr/lib/x86_64-linux-gnu/qt6/qml
-export QT_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/qt6/plugins
-export QT_QUICK_BACKEND=software
-
-docker stop dk_ivi ; docker rm dk_ivi ; docker run -d -it --name dk_ivi -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 --device /dev/dri:/dev/dri --restart unless-stopped ubuntu_dk
-
-docker stop dk_ivi ; docker rm dk_ivi ; docker run -d -it --name dk_ivi -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 --device /dev/dri:/dev/dri --restart unless-stopped --gpus all ubuntu_dk

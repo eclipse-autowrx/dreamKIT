@@ -44,7 +44,7 @@ void ensureMarketplaceSelectionExists(const QString &marketplaceFilePath) {
     }
 }
 
-AppAsync::AppAsync()
+MarketplaceAsync::MarketplaceAsync()
 {
     QString dkRootFolder = qgetenv("DK_CONTAINER_ROOT");
     QString marketplaceFolder = dkRootFolder + "dk_marketplace/";
@@ -54,9 +54,41 @@ AppAsync::AppAsync()
 
     m_marketplaceList.clear();
     m_marketplaceList = parseMarketplaceFile(marketPlaceSelection);
+
+    m_timer_installservice_runningcheck = new QTimer(this);
+    connect(m_timer_installservice_runningcheck, SIGNAL(timeout()), this, SLOT(checkInstallServiceIsRunning()));
+    m_timer_installservice_runningcheck->start(5000);
 }
 
-Q_INVOKABLE void AppAsync::initMarketplaceListFromDB()
+void MarketplaceAsync::checkInstallServiceIsRunning()
+{
+    QString appStsLog =  "/tmp/checkInstallServiceIsRunning.log";
+    QString cmd = "> " + appStsLog + "; docker ps > " + appStsLog;
+    system(cmd.toUtf8());
+    
+    QFile logFile(appStsLog);
+    if (!logFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qCritical() << "Failed to open log file: checkInstallServiceIsRunning.log";
+        return;
+    }
+
+    QTextStream in(&logFile);
+    QString content = in.readAll();
+
+    if (content.isEmpty()) {
+        qCritical() << "Log file is empty or could not be read.";
+        return;
+    }
+
+    if (content.contains("dk_appinstallservice", Qt::CaseSensitivity::CaseSensitive)) {
+        setInstallServiceRunningStatus(true);
+    }
+    else {
+        setInstallServiceRunningStatus(false);
+    }
+}
+
+Q_INVOKABLE void MarketplaceAsync::initMarketplaceListFromDB()
 {
     clearMarketplaceNameList();
     for (const auto &marketplace : m_marketplaceList) {
@@ -65,50 +97,7 @@ Q_INVOKABLE void AppAsync::initMarketplaceListFromDB()
     }
 }
 
-Q_INVOKABLE void AppAsync::initInstalledAppFromDB()
-{
-    qDebug() << __func__ << "@" << __LINE__;
-    installedAppList.clear();
-
-    QFile file("./installedapps/installedapps.csv");
-    if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << file.errorString();
-        qDebug() << __func__ << "@" << __LINE__;
-        return;
-    }
-    QList<QStringList> appList;
-    qDebug() << "appList";
-    while (!file.atEnd()) {
-        QByteArray lineData = file.readLine();
-        QString line = QString(lineData);
-        line.replace("\r\n", "");
-        line.replace("\n", "");
-        qDebug() << line;
-        appList.append(QString(line).split(','));
-    }
-
-    initInstalledAppList(appList.size() - 1);
-
-    for(int i = 1; i < appList.size(); i++) {
-        InstalledAppListStruct appInfo;
-        appInfo.foldername  = appList[i][0];
-        appInfo.displayname = appList[i][1];
-//        appInfo.executable  = "./installedapps/" + appInfo.foldername + "/" + appList[i][2];
-        appInfo.executable  = appList[i][2];
-        appInfo.iconPath    = "file:./installedapps/" + appInfo.foldername + "/" + appList[i][3];
-
-       qDebug() << appInfo.executable << " - " << appInfo.iconPath;
-        appendAppInfoToInstalledAppList(appInfo.displayname, appInfo.iconPath);
-
-        installedAppList.append(appInfo);
-    }
-
-    appendLastRowToInstalledAppList();
-
-    file.close();
-}
-
-Q_INVOKABLE void AppAsync::setCurrentMarketPlaceIdx(int idx)
+Q_INVOKABLE void MarketplaceAsync::setCurrentMarketPlaceIdx(int idx)
 {
     qDebug() << __func__ << __LINE__ << " : current idx = " << idx;
     m_current_idx = idx;
@@ -116,47 +105,8 @@ Q_INVOKABLE void AppAsync::setCurrentMarketPlaceIdx(int idx)
     searchAppFromStore(m_current_searchname);
 }
 
-Q_INVOKABLE void AppAsync::executeApp(const int index)
-{
-    system("ps -A > ps.log");
-
-    QFile MyFile("ps.log");
-    MyFile.open(QIODevice::ReadWrite);
-    QTextStream in (&MyFile);
-    if (in.readAll().contains(installedAppList[index].executable, Qt::CaseSensitivity::CaseSensitive)) {
-        qDebug() << installedAppList[index].executable << " is already open";
-    }
-    else{
-        QString cmd;
-        cmd = "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/Qt-6.6.0/lib/ ./installedapps/" + installedAppList[index].foldername + "/" + installedAppList[index].executable + " &";
-        qDebug() << cmd;
-        system(cmd.toUtf8());
-    }
-    MyFile.close();
-
-    system("> ps.log");
-}
-
-Q_INVOKABLE void AppAsync::runCmd(const QString appName, const QString input)
-{
-    system("ps -A > ps.log");
-
-    QFile MyFile("ps.log");
-    MyFile.open(QIODevice::ReadWrite);
-    QTextStream in (&MyFile);
-    if (in.readAll().contains(appName, Qt::CaseSensitivity::CaseSensitive)) {
-        qDebug() << appName << " is already open";
-    }
-    else{
-        system(input.toUtf8());
-    }
-    MyFile.close();
-
-    system("> ps.log");
-}
-
 // Function to parse marketplaceselection.json and populate a list of MarketplaceInfo
-QList<MarketplaceInfo> AppAsync::parseMarketplaceFile(const QString &filePath) 
+QList<MarketplaceInfo> MarketplaceAsync::parseMarketplaceFile(const QString &filePath) 
 {
     QList<MarketplaceInfo> marketplaceList;
 
@@ -192,7 +142,7 @@ QList<MarketplaceInfo> AppAsync::parseMarketplaceFile(const QString &filePath)
     return marketplaceList;
 }
 
-void AppAsync::appstore_readAppList(const QString searchName, QList<AppListStruct> &AppListInfo) 
+void MarketplaceAsync::appstore_readAppList(const QString searchName, QList<AppListStruct> &AppListInfo) 
 {
     QString marketplaceFolder = DK_CONTAINER_ROOT + "dk_marketplace/";
     QString mpDataPath = marketplaceFolder + "marketplace_data_installcfg.json";
@@ -260,15 +210,11 @@ void AppAsync::appstore_readAppList(const QString searchName, QList<AppListStruc
         // Extract relevant fields for AppListStruct
         appInfo.name = jsonObject["name"].toString();
 
-        // Extract author from 'createdBy' object
-        QJsonObject createdBy = jsonObject["createdBy"].toObject();
-        if (createdBy.contains("descriptor")) {
-            QJsonDocument descriptorDoc = QJsonDocument::fromJson(createdBy["descriptor"].toString().toUtf8());
-            QJsonObject descriptorObj = descriptorDoc.object();
-            appInfo.author = descriptorObj["name"].toString();
-        } else if (createdBy.contains("fullName")) {
-            appInfo.author = createdBy["fullName"].toString();
-        } else {
+        QJsonObject storeId = jsonObject["storeId"].toObject();
+        if (storeId.contains("name")) {
+            appInfo.author = storeId["name"].toString();
+        } 
+        else {
             appInfo.author = "Unknown";
         }
 
@@ -299,40 +245,40 @@ void AppAsync::appstore_readAppList(const QString searchName, QList<AppListStruc
     qDebug() << "App list loaded, total apps found:" << AppListInfo.size();
 }
 
-Q_INVOKABLE void AppAsync::searchAppFromStore(const QString searchName)
+Q_INVOKABLE void MarketplaceAsync::searchAppFromStore(const QString searchName)
 {
     m_current_searchname = searchName;
     if (m_current_searchname == "") {
         m_current_searchname = "vehicle";
     }
 //    qDebug() << __func__ << "m_current_searchname = " << m_current_searchname;
-    searchedAppList.clear();
-    appstore_readAppList(m_current_searchname, searchedAppList);
+    m_searchedAppList.clear();
+    appstore_readAppList(m_current_searchname, m_searchedAppList);
 
-    if (searchedAppList.size()) {
-        for(int i = 0; i < searchedAppList.size(); i++) {
+    if (m_searchedAppList.size()) {
+        for(int i = 0; i < m_searchedAppList.size(); i++) {
             //        qDebug() << AppListInfo[i].name;
-            appendAppInfoToAppList(searchedAppList[i].name, searchedAppList[i].author,
-                                   searchedAppList[i].rating, searchedAppList[i].noofdownload,
-                                   searchedAppList[i].iconPath,
-                                   searchedAppList[i].isInstalled);
+            appendAppInfoToAppList(m_searchedAppList[i].name, m_searchedAppList[i].author,
+                                   m_searchedAppList[i].rating, m_searchedAppList[i].noofdownload,
+                                   m_searchedAppList[i].iconPath,
+                                   m_searchedAppList[i].isInstalled);
         }
     }
     else {
         appendAppInfoToAppList("", "", "", "", "", true);
     }
-    appendLastRowToAppList(searchedAppList.size());
+    appendLastRowToAppList(m_searchedAppList.size());
 }
 
-Q_INVOKABLE void AppAsync::installApp(const int index)
+Q_INVOKABLE void MarketplaceAsync::installApp(const int index)
 {
-    if (index >= searchedAppList.size()) {
+    if (index >= m_searchedAppList.size()) {
         qDebug() << "index out of range";
         return;
     }
 
-    QString appId = searchedAppList[index].id;
-    qDebug() << searchedAppList[index].name << " index = " << index << " is installing";
+    QString appId = m_searchedAppList[index].id;
+    qDebug() << m_searchedAppList[index].name << " index = " << index << " is installing";
     qDebug() << " appId = " << appId;
 
     QString dockerHubUrl = "";
@@ -346,54 +292,4 @@ Q_INVOKABLE void AppAsync::installApp(const int index)
     QString cmd = "docker kill dk_appinstallservice;docker rm dk_appinstallservice;docker run -d -it --name dk_appinstallservice -v /home/" + DK_VCU_USERNAME + "/.dk:/app/.dk -v /var/run/docker.sock:/var/run/docker.sock --log-opt max-size=10m --log-opt max-file=3 -v " + installCfg + ":/app/installCfg.json " + dockerHubUrl + "dk_appinstallservice:latest";
     qDebug() << " install cmd = " << cmd;
     system(cmd.toUtf8()); // this is the exemple, download from local.
-
-    // refresh install app vielw
-    initInstalledAppFromDB();
-}
-
-
-Q_INVOKABLE void AppAsync::removeApp(const int index)
-{
-    if (index >= installedAppList.size()) {
-        qDebug() << "index out of range";
-        return;
-    }
-
-    qDebug() << installedAppList[index].displayname << " index = " << index << " is about to be removed" ;
-
-    QFile file("installedapps/installedapps.csv");
-    if (!file.open(QIODevice::ReadWrite | QIODevice::Text)) {
-        qDebug() << file.errorString();
-        return;
-    }
-
-    QString content;
-    content.clear();
-    QTextStream stream(&file);
-    int count = 0;
-    while (!file.atEnd()) {
-        QByteArray lineData = file.readLine();
-        QString line = QString(lineData);
-        count++;
-        if ((count - 2) == index) continue;
-        content.append(line);
-    }
-
-    file.resize(0);
-    stream << content;
-    file.close();
-
-    // remove entire app folder
-    QString cmd;
-    cmd.clear();
-    cmd = "rm -rf installedapps/" + installedAppList[index].foldername;
-    qDebug() << cmd;
-    system(cmd.toUtf8());
-    cmd.clear();
-    cmd = "rm -rf installedapps/" + installedAppList[index].foldername + ".zip";
-    qDebug() << cmd;
-    system(cmd.toUtf8());
-
-    // refresh install app view
-    initInstalledAppFromDB();
 }

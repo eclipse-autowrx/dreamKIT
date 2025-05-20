@@ -38,7 +38,7 @@ public:
     void run();
     void triggerCheckAppStart(QString id, QString name);
 
-signals:
+Q_SIGNALS:
     void resultReady(QString appId, bool isStarted, QString msg);
 
 private:
@@ -70,7 +70,7 @@ Q_SIGNALS:
     void updateStartAppMsg(QString appId, bool isStarted, QString msg);
     void updateServicesRunningSts(QString appId, bool isStarted, int idx);
 
-public slots:
+public Q_SLOTS:
     void handleResults(QString appId, bool isStarted, QString msg);
     void fileChanged(const QString& path);
     void checkRunningAppSts();
