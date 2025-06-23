@@ -47,6 +47,10 @@ The DreamKIT integrates three main hardware modules through a central internal c
 - **USB-C Port**: Rounded connector → Internal circuit board
 - **Audio Port**: Circular connector → Internal circuit board
 
+### Zone 3: IVI Port Connection to DreamKIT
+
+![Zone 3: IVI Port to DreamKIT Real Connection](images/zones/zone3-ivi-to-dreamkit-port.png)
+
 ## Internal Hardware Connections
 
 ### Primary Data Connection
