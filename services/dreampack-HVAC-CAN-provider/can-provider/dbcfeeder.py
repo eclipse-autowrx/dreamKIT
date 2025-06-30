@@ -6,10 +6,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-#
-# SPDX-License-Identifier: Apache-2.0
-########################################################################
-
 """
 Feeder parsing CAN data and sending to KUKSA.val
 """

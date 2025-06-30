@@ -7,10 +7,6 @@
 # SPDX-License-Identifier: MIT
 
 #
-# SPDX-License-Identifier: Apache-2.0
-########################################################################
-
-#
 # Set up virtual can device "elmcan" as sink
 # for the elm2canbridge
 #
