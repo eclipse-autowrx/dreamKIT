@@ -393,7 +393,7 @@ Rectangle {
                 Column {
                     anchors.fill: parent
                     anchors.margins: 20
-                    spacing: 20
+                    spacing: 50
 
                     Text {
                         text: "Lighting Controls"
@@ -406,14 +406,14 @@ Rectangle {
 
                     Column {
                         width: parent.width
-                        spacing: 15
+                        spacing: 50
 
                         // Custom ToggleButton for Low Beam
                         Rectangle {
                             id: lowbeamBtn
                             property bool checked: false
                             width: parent.width
-                            height: 60
+                            height: 70
                             radius: 10
                             color: checked ? "#00D4AA" : "#2A2A2A"
                             border.color: checked ? "#00D4AA" : "#404040"
@@ -434,7 +434,7 @@ Rectangle {
                                 Text {
                                     text: "Low Beam"
                                     color: lowbeamBtn.checked ? "#000000" : "#FFFFFF"
-                                    font.pixelSize: 16
+                                    font.pixelSize: 20
                                     font.family: "Segoe UI"
                                     font.weight: Font.Medium
                                     anchors.verticalCenter: parent.verticalCenter
@@ -455,7 +455,7 @@ Rectangle {
                             id: highbeamBtn
                             property bool checked: false
                             width: parent.width
-                            height: 60
+                            height: 70
                             radius: 10
                             color: checked ? "#00D4AA" : "#2A2A2A"
                             border.color: checked ? "#00D4AA" : "#404040"
@@ -478,7 +478,7 @@ Rectangle {
                                 Text {
                                     text: "High Beam"
                                     color: highbeamBtn.checked ? "#000000" : "#FFFFFF"
-                                    font.pixelSize: 16
+                                    font.pixelSize: 20
                                     font.family: "Segoe UI"
                                     font.weight: Font.Medium
                                     anchors.verticalCenter: parent.verticalCenter
@@ -499,7 +499,7 @@ Rectangle {
                             id: hazardBtn
                             property bool checked: false
                             width: parent.width
-                            height: 60
+                            height: 70
                             radius: 10
                             color: checked ? "#FF4444" : "#2A2A2A"
                             border.color: checked ? "#FF4444" : "#404040"
@@ -513,7 +513,7 @@ Rectangle {
                                     width: 12
                                     height: 8
                                     radius: 4
-                                    color: hazardBtn.checked ? "#FF4444" : "#404040"
+                                    color: hazardBtn.checked ? "white" : "#404040"
                                     anchors.verticalCenter: parent.verticalCenter
                                     
                                     SequentialAnimation on opacity {
@@ -526,8 +526,8 @@ Rectangle {
                                 
                                 Text {
                                     text: "Hazard Lights"
-                                    color: hazardBtn.checked ? "#FFFFFF" : "#FFFFFF"
-                                    font.pixelSize: 16
+                                    color: hazardBtn.checked ? "black" : "#FFFFFF"
+                                    font.pixelSize: 20
                                     font.family: "Segoe UI"
                                     font.weight: Font.Medium
                                     anchors.verticalCenter: parent.verticalCenter
@@ -577,18 +577,49 @@ Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
+
                         // Driver Fan Control
                         Column {
                             width: parent.width
                             spacing: 10
 
-                            Text {
-                                text: "Driver: " + driverFanSlider.value + "%"
-                                font.pixelSize: 16
-                                color: "#B0B0B0"
-                                font.family: "Segoe UI"
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            // Text {
+                            //     text: "Driver: " + driverFanSlider.value + "%"
+                            //     font.pixelSize: 16
+                            //     color: "#B0B0B0"
+                            //     font.family: "Segoe UI"
+                            //     anchors.horizontalCenter: parent.horizontalCenter
+                            // }
+
+                            Row {
+                                width: parent.width
+                                height: 20
+
+                                Column {
+                                    width: parent.width / 2
+                                    Text {
+                                        // anchors.horizontalCenter: parent.horizontalCenter
+                                        anchors.right: parent.right
+                                        text: "Driver:"
+                                        font.pixelSize: 16
+                                        color: "#B0B0B0"
+                                        font.family: "Segoe UI"
+                                    }
+                                }
+
+                                Column {
+                                    width: parent.width / 2
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: driverFanSlider.value + "%"
+                                        font.pixelSize: 16
+                                        color: "#B0B0B0"
+                                        font.family: "Segoe UI"
+                                    }
+                                }
                             }
+
+
 
                             Slider {
                                 id: driverFanSlider
@@ -597,14 +628,20 @@ Rectangle {
                                 stepSize: 10
                                 to: 100
                                 value: 0
+                                property int lastBackendValue: -1
 
-                                onValueChanged: {
-                                    if (pressed) {
-                                        // Convert percentage to 0-10 range for backend
+                                    
+                                onPressedChanged: {
+                                    if(!pressed){
                                         let backendValue = Math.round(value / 10)
-                                        controlPageAsync.qml_setApi_hvac_driverSide_FanSpeed(backendValue)
+                                        if (backendValue !== lastBackendValue){
+                                            lastBackendValue = backendValue
+                                            controlPageAsync.qml_setApi_hvac_driverSide_FanSpeed(lastBackendValue)
+                                        }
                                     }
                                 }
+
+                                
 
                                 background: Rectangle {
                                     x: driverFanSlider.leftPadding
@@ -642,13 +679,36 @@ Rectangle {
                             width: parent.width
                             spacing: 10
 
-                            Text {
-                                text: "Passenger: " + passengerFanSlider.value + "%"
-                                font.pixelSize: 16
-                                color: "#B0B0B0"
-                                font.family: "Segoe UI"
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            
+
+                            Row {
+                                width: parent.width
+                                height: 20
+
+                                Column {
+                                    width: parent.width / 2
+                                    Text {
+                                        // anchors.horizontalCenter: parent.horizontalCenter
+                                        anchors.right: parent.right
+                                        text: "Passenger:"
+                                        font.pixelSize: 16
+                                        color: "#B0B0B0"
+                                        font.family: "Segoe UI"
+                                    }
+                                }
+
+                                Column {
+                                    width: parent.width / 2
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: passengerFanSlider.value + "%"
+                                        font.pixelSize: 16
+                                        color: "#B0B0B0"
+                                        font.family: "Segoe UI"
+                                    }
+                                }
                             }
+
 
                             Slider {
                                 id: passengerFanSlider
@@ -657,14 +717,17 @@ Rectangle {
                                 stepSize: 10
                                 to: 100
                                 value: 0
-
-                                onValueChanged: {
-                                    if (pressed) {
-                                        // Convert percentage to 0-10 range for backend
+                                property  int lastSent :  -1
+                                onPressedChanged: {
+                                    if(!pressed){
                                         let backendValue = Math.round(value / 10)
-                                        controlPageAsync.qml_setApi_hvac_passengerSide_FanSpeed(backendValue)
+                                        if (backendValue !== lastSent){
+                                            lastSent = backendValue
+                                            controlPageAsync.qml_setApi_hvac_passengerSide_FanSpeed(lastSent)
+                                        }
                                     }
                                 }
+
 
                                 background: Rectangle {
                                     x: passengerFanSlider.leftPadding
@@ -758,10 +821,21 @@ Rectangle {
                                     
                                     Text {
                                         anchors.centerIn: parent
-                                        text: seatLevels.currentLevel > 0 ? seatLevels.currentLevel : "0"
+                                        // seatLevels.currentLevel > 0 && seatLevels.currentLevel < "4" ? seatLevels.currentLevel : "0"
+                                        text: {
+                                            if (seatLevels.currentLevel > 3){
+                                                "3"
+                                            }
+                                            else if (seatLevels.currentLevel > 0 && seatLevels.currentLevel < "4"){
+                                                seatLevels.currentLevel
+                                            }
+                                            else{
+                                                "0"
+                                            }
+                                        }
                                         font.pixelSize: 14
                                         font.bold: true
-                                        color: "#FFFFFF"
+                                        color: "black"
                                     }
                                 }
                             }
@@ -794,10 +868,17 @@ Rectangle {
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            seatLevels.currentLevel = 1
-                                            controlPageAsync.qml_setApi_seat_driverSide_position(1)
+                                            if (seatLevels.currentLevel !== 1){
+                                                seatLevels.currentLevel = 1;
+                                                controlPageAsync.qml_setApi_seat_driverSide_position(1);
+                                            }
+                                            else{
+                                                seatLevels.currentLevel = 0 ;
+                                                controlPageAsync.qml_setApi_seat_driverSide_position(0)
+                                            }
                                         }
                                     }
+
                                 }
 
                                 // Level 2 Button
@@ -822,8 +903,14 @@ Rectangle {
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            seatLevels.currentLevel = 2
-                                            controlPageAsync.qml_setApi_seat_driverSide_position(2)
+                                            if (seatLevels.currentLevel !== 2) {
+                                                seatLevels.currentLevel = 2
+                                                controlPageAsync.qml_setApi_seat_driverSide_position(2)
+                                            }
+                                            else {
+                                                seatLevels.currentLevel = 0
+                                                controlPageAsync.qml_setApi_seat_driverSide_position(0)
+                                            }
                                         }
                                     }
                                 }
@@ -831,7 +918,7 @@ Rectangle {
                                 // Level 3 Button
                                 Rectangle {
                                     id: seatLevel3
-                                    property bool checked: seatLevels.currentLevel === 3
+                                    property bool checked: seatLevels.currentLevel >= 3
                                     width: 60
                                     height: 60
                                     radius: 10
@@ -850,11 +937,18 @@ Rectangle {
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            seatLevels.currentLevel = 3
-                                            controlPageAsync.qml_setApi_seat_driverSide_position(3)
+                                            if (seatLevels.currentLevel !== 3){
+                                                seatLevels.currentLevel = 3
+                                                controlPageAsync.qml_setApi_seat_driverSide_position(3)
+                                            }
+                                            else{
+                                                seatLevels.currentLevel = 0
+                                                controlPageAsync.qml_setApi_seat_driverSide_position(0)
+                                            }
                                         }
                                     }
                                 }
+                               
                             }
                         }
                     }
