@@ -93,8 +93,7 @@ Build & run Docker image
 docker build -t dk_service_can_provider:latest --file Dockerfile .
 # 
 # Run the docker
-docker stop dk_service_can_provider; docker rm dk_service_can_provider
-docker run -d -it --name dk_service_can_provider --net=host -e LOG_LEVEL=INFO -e CAN_PORT=vcan0 dk_service_can_provider
+docker kill dk_service_can_provider; docker rm dk_service_can_provider ; docker run -d -it --name dk_service_can_provider --net=host -e KUKSA_ADDRESS=localhost -e MAPPING_FILE=mapping/vss_4.0/vss_dbc.json -e LOG_LEVEL=INFO -e KUKSA_ADDRESS=localhost -e CAN_PORT=vcan0 dk_service_can_provider
 ```
 
 Debug
@@ -130,20 +129,44 @@ kuksa-client grpc://127.0.0.1:55555
 kuksa-client grpc://192.168.56.48:55555
 
 #
-# Supported API
+# Supported API - VSS 4.x
 setTargetValue Vehicle.Body.Lights.Beam.Low.IsOn true/false
 setTargetValue Vehicle.Body.Lights.Beam.High.IsOn true/false
 setTargetValue Vehicle.Body.Lights.Hazard.IsSignaling true/false
-setTargetValue Vehicle.Cabin.Seat.Row1.DriverSide.Position {0-3}
+setTargetValue Vehicle.Cabin.Seat.Row1.DriverSide.Position {0-10}
 setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed {0-100}
 setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed {0-100}
 
+# Supported API - VSS 3.x
+setTargetValue Vehicle.Body.Lights.IsLowBeamOn true/false
+setTargetValue Vehicle.Body.Lights.IsBrakeOn true/false
+setTargetValue Vehicle.Body.Lights.IsHazardOn true/false
+setTargetValue Vehicle.Cabin.Seat.Row1.Pos1.Position {0-10}
+setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Left.FanSpeed {0-100}
+setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Right.FanSpeed {0-100}
+
 #
-# Request the LowBeam state
-Test Client> setTargetValue Vehicle.Body.Lights.Beam.Low.IsOn true
-OK
-Test Client> setTargetValue Vehicle.Body.Lights.Beam.Low.IsOn false
-OK
+# Example with VSS 3.x
+Test Client> setTargetValue Vehicle.Body.Lights.IsLowBeamOn true
+vcan0  3E9   [8]  01 00 00 00 00 00 00 00
+
+Test Client> setTargetValue Vehicle.Body.Lights.IsBrakeOn true
+vcan0  3E9   [8]  00 00 40 00 00 00 00 00
+
+Test Client> Vehicle.Body.Lights.IsHazardOn true
+vcan0  3E9   [8]  04 00 00 00 00 00 00 00
+
+Test Client> Vehicle.Cabin.Seat.Row1.Pos1.Position {0-10}
+vcan0  3C3   [8]  04 00 00 00 00 00 00 00
+...
+vcan0  3C3   [8]  28 00 00 00 00 00 00 00
+
+Test Client> Vehicle.Cabin.HVAC.Station.Row1.Left.FanSpeed {0-100}
+vcan0  20C   [8]  00 00 32 00 0A 00 05 00
+
+Test Client> Vehicle.Cabin.HVAC.Station.Row1.Right.FanSpeed {0-100}
+vcan0  282   [8]  00 18 00 00 E8 B3 F1 00
+
 #
 # Expected with receiving CAN message
 # LowBeam ~ On

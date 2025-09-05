@@ -33,7 +33,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy additional files needed for runtime
 COPY /can-provider /build/kuksa-can-provider
 COPY /prepare-dbc-file/ModelCAN.dbc /build/kuksa-can-provider
-COPY /prepare-dbc-file/mapping/ /build/kuksa-can-provider/mapping/vss_4.0
+COPY /prepare-dbc-file/mapping/ /build/kuksa-can-provider/mapping/
 
 # Build the executable with pyinstaller
 # RUN pyinstaller --collect-data kuksa_client --hidden-import can.interfaces.socketcan --clean -F -s dbcfeeder.py
