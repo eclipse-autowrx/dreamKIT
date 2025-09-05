@@ -55,3 +55,6 @@ jobs:
             ghcr.io/${{ env.OWNER }}/dk_service_can_provider:${{ env.TAG }}
             ghcr.io/${{ env.OWNER }}/dk_service_can_provider:latest
           platforms: linux/amd64,linux/arm64
+          # caching   scope can-provider
+          cache-from: type=gha,scope=${{ github.workflow }}
+          cache-to:   type=gha,scope=${{ github.workflow }},mode=max
