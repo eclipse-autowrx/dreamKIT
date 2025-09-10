@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (c) 2025 Eclipse Foundation.
 # 
 # This program and the accompanying materials are made available under the
@@ -6,7 +7,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-#!/bin/sh
 
 echo "Start dk service can provider"
 

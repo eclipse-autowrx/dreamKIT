@@ -1,219 +1,476 @@
 # dk_service_can_provider
 
 > **Overview**  
-> This Docker image provides a service to communicate with CAN bus based on CAN signals defined in `.dbc` files and VSS signals.
+> This Docker service provides CAN bus communication based on CAN signals defined in `.dbc` files and VSS (Vehicle Signal Specification) signals. It bridges CAN bus messages with KUKSA databroker for vehicle data management.
 
+## 🎯 Development Scenarios & Workflows
 
+Choose the workflow that matches your development environment and goals:
 
-## Table of Contents
+### 📋 Scenario Overview
 
-- [dk\_service\_can\_provider](#dk_service_can_provider)
-  - [Table of Contents](#table-of-contents)
-  - [Prerequisites](#prerequisites)
-  - [Local Development and Testing](#local-development-and-testing)
-    - [Fix Shell Script Line Endings and Permissions](#fix-shell-script-line-endings-and-permissions)
-    - [Network Setup (Ubuntu VM \<-\> Jetson Orin \<-\> S32G)](#network-setup-ubuntu-vm---jetson-orin---s32g)
-    - [Local - Build and Test](#local---build-and-test)
-  - [S32G - Build and Test](#s32g---build-and-test)
-    - [Prepare the docker image (arm46)](#prepare-the-docker-image-arm46)
-    - [Deploy and run](#deploy-and-run)
-    - [Check CAN Bus](#check-can-bus)
+| Scenario | Environment | Architecture | Use Case | Workflow |
+|----------|-------------|--------------|----------|----------|
+| **Local Dev (x86)** | Ubuntu x86_64 | amd64 | Development & Testing | [Local Development](#-scenario-1-local-development-x86_64) |
+| **Local Dev (ARM)** | Jetson Orin | arm64 | Native ARM Testing | [ARM Development](#-scenario-2-arm-development-jetson-orin) |
+| **Production** | k3s Cluster | arm64 | Production Deployment | [Production Deployment](#-scenario-3-production-deployment-k3s) |
+| **Marketplace** | Public Release | arm64 | Public Distribution | [Marketplace Release](#-scenario-4-marketplace-release) |
 
+---
 
+## 🖥️ Scenario 1: Local Development (x86_64)
 
-## Prerequisites
+**When to use:** Developing and testing on Ubuntu x86_64 with virtual CAN
 
-- **dreamOS** must be installed prior to using this service.  
-  Refer to the installation script:  
-  `installation-scripts/jetson-orin/dk_install.sh`
+### Prerequisites
+- Ubuntu x86_64 system
+- Docker installed
+- KUKSA databroker running on localhost:55555
+- CAN utilities: `sudo apt install can-utils`
 
+### Workflow
+```bash
+# 1. Build for current architecture (auto-detected)
+./build.sh local
 
+# 2. Start development environment
+./start.sh local
 
-## Local Development and Testing
-
-### Fix Shell Script Line Endings and Permissions
-
-Fix potential error with sh file
-```shell
-# Fix error at sh files
-sed -i -e 's/\r$//' *.sh
-chmod +x *.sh
-```
-
-### Network Setup (Ubuntu VM <-> Jetson Orin <-> S32G)
-
-Having the Ubuntu VM connects to LAN network of Jetson Orin (addr:192.168.56.48) <> S32G (addr:192.168.56.49)
-```shell
-#
-# Ubuntu VM
-sudo ip link add name br0 type bridge
-sudo ip link set dev br0 up
-sudo ip link set dev enp0s8 master br0
-sudo ifconfig br0 192.168.56.3
-sudo ip link set br0 address 5e:5e:c9:a7:22:55
-
-pass: dev12345
-
-#
-# Connect to Jetson Orin
-ssh sdv-orin@192.168.56.48
-pass: 123456
-# Check the list of docker
-sdv-orin@ubuntu:~$ docker ps -a
-CONTAINER ID   IMAGE                                          COMMAND                  CREATED          STATUS                       PORTS                                                     NAMES
-1a34ceaeef0b   boschvn/sdv-runtime:latest                     "/start_services.sh"     17 hours ago     Up 15 hours                  3090/tcp, 0.0.0.0:55555->55555/tcp, :::55555->55555/tcp   sdv-runtime
-218d7048ec82   phongbosch/dk_manager:latest                   "/app/start.sh"          3 days ago       Up 15 hours                                                                            dk_manager
-d5d708ec0fd5   phongbosch/dk_ivi:latest                       "/app/start.sh"          3 days ago       Up 15 hours                                                                            dk_ivi
-
-#
-# Connect to S32G
-ssh root@192.168.56.49
-# Connect to Pi
-ssh phong@192.168.56.49
-#
-# Check the list of docker
-root@s32g274ardb2:~# docker ps -a
-CONTAINER ID   IMAGE                                        COMMAND                  CREATED          STATUS                     PORTS                                                                                                                                     NAMES
-acf0daebb4fc   dk_service_can_provider:arm64                "/app/start.sh"          28 minutes ago   Up 24 minutes                                                                                                                                                        dk_service_can_provider
-```
-
-### Local - Build and Test
-
-Create the Virtual CAN
-```shell
-./prepare-dbc-file/createvcan.sh vcan0
-# Observe the CAN network
-candump vcan0 &
-```
-
-Build & run Docker image
-```shell
-#
-# Build
-docker build -t dk_service_can_provider:latest --file Dockerfile .
-# 
-# Run the docker
-docker kill dk_service_can_provider; docker rm dk_service_can_provider ; docker run -d -it --name dk_service_can_provider --net=host -e KUKSA_ADDRESS=localhost -e MAPPING_FILE=mapping/vss_4.0/vss_dbc.json -e LOG_LEVEL=INFO -e KUKSA_ADDRESS=localhost -e CAN_PORT=vcan0 dk_service_can_provider
-```
-
-Debug
-```shell
-# The console with output
-2025-04-15 09:48:38,167 INFO dbcfeeder: Reading configuration from file: config/dbc_feeder.ini
-2025-04-15 09:48:38,168 INFO dbcfeeder: DBC2VAL mode is: True
-2025-04-15 09:48:38,168 INFO dbcfeeder: VAL2DBC mode is: True
-2025-04-15 09:48:38,169 INFO dbcfeeder: Path to token information not given
-2025-04-15 09:48:38,169 INFO dbcfeeder: Starting CAN feeder
-2025-04-15 09:48:38,169 INFO dbcfeederlib.dbcparser: Reading definitions from bus description file ModelCAN.dbc
-...
-2025-04-15 09:48:38,546 INFO dbcfeederlib.databrokerclientwrapper: Vehicle.Body.Lights.Beam.Low.IsOn is already registered with type BOOLEAN
-...
-2025-04-15 09:48:38,507 INFO dbcfeederlib.databrokerclientwrapper: Connectivity as string: ChannelConnectivity.READY
-2025-04-15 09:48:38,507 INFO dbcfeederlib.databrokerclientwrapper: Connected to data broker
-2025-04-15 09:48:38,517 INFO can.interfaces.socketcan.socketcan: Created a socket
-2025-04-15 09:48:38,517 INFO dbcfeederlib.dbcreader: Starting to receive CAN messages fom bus
-2025-04-15 09:48:38,518 INFO dbcfeeder: Check that datapoints are registered
-2025-04-15 09:48:38,518 INFO dbcfeeder: Starting thread for processing VSS Data Entry changes, writing to CAN device vcan0
-2025-04-15 09:48:38,520 INFO can.interfaces.socketcan.socketcan: Created a socket
-2025-04-15 09:48:38,523 INFO dbcfeederlib.databrokerclientwrapper: Subscribe entry: SubscribeEntry(path='Vehicle.Body.Lights.Beam.Low.IsOn', view=<View.FIELDS: 10>, fields=[<Field.ACTUATOR_TARGET: 3>])
-...
-2025-04-15 09:48:38,672 INFO dbcfeeder: Starting to process CAN signals
-```
-
-Test
-```shell
-#
-# Testing with executing the kuksa-client python version
+# 3. Test the service
 kuksa-client grpc://127.0.0.1:55555
-# or
+# Test commands:
+setTargetValue Vehicle.Body.Lights.Beam.Low.IsOn true
+
+# 4. Monitor CAN traffic
+candump vcan0
+
+# 5. Stop when done
+./stop.sh local
+```
+
+### Configuration
+- **KUKSA Address:** `localhost:55555`
+- **CAN Interface:** `vcan0` (virtual)
+- **VSS Mapping:** `mapping/vss_4.0/vss_dbc.json`
+- **Architecture:** Auto-detected (amd64)
+
+---
+
+## 💻 Scenario 2: ARM Development (Jetson Orin)
+
+**When to use:** Testing directly on ARM64 hardware before production deployment
+
+### Prerequisites
+- Jetson Orin with Ubuntu ARM64
+- Docker installed
+- KUKSA databroker running
+- Physical CAN interface or virtual CAN
+
+### Workflow
+```bash
+# 1. Build for current architecture (ARM64 auto-detected)
+./build.sh local
+
+# 2. Start with virtual CAN for testing
+./start.sh local
+
+# OR start with physical CAN
+docker run -d -it --name dk_service_can_provider --net=host --privileged \
+  -e KUKSA_ADDRESS=localhost \
+  -e CAN_PORT=can1 \
+  -e MAPPING_FILE=mapping/vss_4.0/vss_dbc.json \
+  dk_service_can_provider:latest
+
+# 3. Test the service
+kuksa-client grpc://127.0.0.1:55555
+
+# 4. Monitor CAN traffic
+candump can1  # or vcan0
+
+# 5. Stop when done
+./stop.sh local
+```
+
+### Configuration
+- **KUKSA Address:** `localhost:55555`
+- **CAN Interface:** `can1` (physical) or `vcan0` (virtual)
+- **VSS Mapping:** `mapping/vss_4.0/vss_dbc.json`
+- **Architecture:** ARM64 (auto-detected)
+
+---
+
+## 🚀 Scenario 3: Production Deployment (k3s)
+
+**When to use:** Deploying to production k3s cluster with distributed nodes
+
+### Prerequisites
+- k3s cluster running
+- Jetson Orin as master (192.168.56.48)
+- S32G as agent node with CAN interface
+- kubectl configured
+
+### Option A: Using Pre-built Image (Recommended)
+```bash
+# 1. Build and push to GitHub Container Registry
+./build.sh prod --push
+
+# 2. Deploy to k3s (pulls from GHCR)
+kubectl apply -f manifests/mirror-remote.yaml    # Pull image to local registry
+kubectl apply -f manifests/deployment.yaml # Deploy service
+kubectl apply -f manifests/service.yaml   # Create service
+
+# 3. Monitor deployment
+kubectl get pods -l app=dk-service-can-provider
+kubectl logs -f -l app=dk-service-can-provider
+
+# 4. Test the service
+kuksa-client grpc://192.168.56.48:55555
+```
+
+### Option B: Using Local Image Import
+```bash
+# 1. Build for production
+./build.sh prod
+
+# 2. Import to k3s and deploy
+./start.sh prod --import
+
+# 3. Monitor deployment
+./start.sh prod --status
+```
+
+### Option C: Manual Image Import (Your Method)
+```bash
+# 1. Build production image
+./build.sh prod
+
+# 2. Save and import image
+docker save dk_service_can_provider:latest > dk_service_can_provider.tar
+sudo k3s ctr images import dk_service_can_provider.tar
+rm dk_service_can_provider.tar
+
+# 3. Deploy manifests
+kubectl apply -f manifests/mirror-local.yaml
+kubectl apply -f manifests/deployment.yaml
+```
+
+### Configuration
+- **KUKSA Address:** `192.168.56.48:55555`
+- **CAN Interface:** `can1` (physical on S32G)
+- **VSS Mapping:** `mapping/vss_4.0/vss_dbc.json`
+- **Architecture:** ARM64
+- **Node Assignment:** Service runs on `vip` node
+
+---
+
+## 🌐 Scenario 4: Marketplace Release
+
+**When to use:** Publishing to Digital Auto Marketplace for public distribution
+
+### Prerequisites
+- Tested and validated service
+- GitHub Container Registry access
+- Digital Auto Marketplace account
+
+### Workflow
+```bash
+# 1. Build and test locally (ARM64)
+./build.sh local  # On Jetson Orin
+
+# 2. Build and push production image
+./build.sh prod v1.0.0 --push
+
+# 3. Verify image is public
+docker pull ghcr.io/samtranbosch/dk_service_can_provider:v1.0.0
+
+# 4. Submit to marketplace with template
+```
+
+### Marketplace Template
+```json
+{
+  "Target": "vip",
+  "Platform": "linux/arm64",
+  "DockerImageURL": "ghcr.io/samtranbosch/dk_service_can_provider:latest",
+  "RuntimeCfg": {
+    "CAN_PORT": "can1",
+    "MAPPING_FILE": "mapping/vss_4.0/vss_dbc.json",
+    "KUKSA_ADDRESS": "192.168.56.48"
+  }
+}
+```
+
+### Configuration
+- **Public Image:** `ghcr.io/samtranbosch/dk_service_can_provider:latest`
+- **Target Node:** `vip` (agent node with CAN access)
+- **Platform:** `linux/arm64`
+- **Runtime Config:** Production settings
+
+---
+
+## 🛠️ Build Script Reference
+
+### Commands
+```bash
+# Auto-detect architecture and build for local development
+./build.sh local [version]
+
+# Build for production (ARM64) deployment
+./build.sh prod [version] [--push]
+
+# Build for both environments
+./build.sh both [version]
+```
+
+### Architecture Detection
+- **x86_64 → linux/amd64** (Ubuntu development)
+- **aarch64/arm64 → linux/arm64** (Jetson Orin/Production)
+
+### Examples
+```bash
+./build.sh local              # Current arch, latest tag
+./build.sh local v1.0.0       # Current arch, specific version
+./build.sh prod               # ARM64, latest tag
+./build.sh prod v1.0.0 --push # ARM64, push to GHCR
+./build.sh both               # Both architectures
+```
+
+---
+
+## 📊 Service Management
+
+### Start Service
+```bash
+./start.sh local              # Local development
+./start.sh prod               # Production deployment
+./start.sh prod --import      # Import image and deploy
+./start.sh [env] --status     # Check status
+```
+
+### Stop Service
+```bash
+./stop.sh local               # Stop local container
+./stop.sh prod                # Stop k3s deployment
+./stop.sh [env] --cleanup     # Stop and cleanup
+./stop.sh [env] --force       # Force stop
+```
+
+### Monitor Service
+```bash
+# Local
+docker logs -f dk_service_can_provider
+candump vcan0
+
+# Production
+kubectl logs -f -l app=dk-service-can-provider
+kubectl get pods -l app=dk-service-can-provider
+```
+
+---
+
+## 🔧 Configuration Reference
+
+### Environment Variables
+
+| Variable | Local | Production | Description |
+|----------|-------|------------|-------------|
+| `KUKSA_ADDRESS` | `localhost` | `192.168.56.48` | KUKSA databroker address |
+| `CAN_PORT` | `vcan0` | `can1` | CAN interface name |
+| `MAPPING_FILE` | `mapping/vss_3.0/vss_dbc.json` | `mapping/vss_4.0/vss_dbc.json` | VSS mapping file |
+| `LOG_LEVEL` | `INFO` | `INFO` | Logging verbosity |
+| `DBC_FILE` | `ModelCAN.dbc` | `ModelCAN.dbc` | DBC definition file |
+
+### Network Architecture
+
+```
+Development (Local):
+┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
+│   Developer     │    │   Docker     │    │   KUKSA         │
+│   Machine       │◄──►│   Container  │◄──►│   Databroker    │
+│   (vcan0)       │    │              │    │   (localhost)   │
+└─────────────────┘    └──────────────┘    └─────────────────┘
+
+Production (k3s):
+┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
+│   S32G          │    │   k3s Pod    │    │   Jetson Orin   │
+│   (can1)        │◄──►│   (vip node) │◄──►│   KUKSA Server  │
+│                 │    │              │    │   (192.168.56.48)│
+└─────────────────┘    └──────────────┘    └─────────────────┘
+```
+
+---
+
+## 🧪 Testing & Validation
+
+### VSS Signal Testing
+
+#### VSS 4.x (Production)
+```bash
 kuksa-client grpc://192.168.56.48:55555
 
-#
-# Supported API - VSS 4.x
-setTargetValue Vehicle.Body.Lights.Beam.Low.IsOn true/false
-setTargetValue Vehicle.Body.Lights.Beam.High.IsOn true/false
-setTargetValue Vehicle.Body.Lights.Hazard.IsSignaling true/false
-setTargetValue Vehicle.Cabin.Seat.Row1.DriverSide.Position {0-10}
-setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed {0-100}
-setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed {0-100}
+# Light Controls
+setTargetValue Vehicle.Body.Lights.Beam.Low.IsOn true
+setTargetValue Vehicle.Body.Lights.Beam.High.IsOn false
+setTargetValue Vehicle.Body.Lights.Hazard.IsSignaling true
 
-# Supported API - VSS 3.x
-setTargetValue Vehicle.Body.Lights.IsLowBeamOn true/false
-setTargetValue Vehicle.Body.Lights.IsBrakeOn true/false
-setTargetValue Vehicle.Body.Lights.IsHazardOn true/false
-setTargetValue Vehicle.Cabin.Seat.Row1.Pos1.Position {0-10}
-setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Left.FanSpeed {0-100}
-setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Right.FanSpeed {0-100}
+# Seat Position (0-10)
+setTargetValue Vehicle.Cabin.Seat.Row1.DriverSide.Position 5
 
-#
-# Example with VSS 3.x
-Test Client> setTargetValue Vehicle.Body.Lights.IsLowBeamOn true
-vcan0  3E9   [8]  01 00 00 00 00 00 00 00
-
-Test Client> setTargetValue Vehicle.Body.Lights.IsBrakeOn true
-vcan0  3E9   [8]  00 00 40 00 00 00 00 00
-
-Test Client> Vehicle.Body.Lights.IsHazardOn true
-vcan0  3E9   [8]  04 00 00 00 00 00 00 00
-
-Test Client> Vehicle.Cabin.Seat.Row1.Pos1.Position {0-10}
-vcan0  3C3   [8]  04 00 00 00 00 00 00 00
-...
-vcan0  3C3   [8]  28 00 00 00 00 00 00 00
-
-Test Client> Vehicle.Cabin.HVAC.Station.Row1.Left.FanSpeed {0-100}
-vcan0  20C   [8]  00 00 32 00 0A 00 05 00
-
-Test Client> Vehicle.Cabin.HVAC.Station.Row1.Right.FanSpeed {0-100}
-vcan0  282   [8]  00 18 00 00 E8 B3 F1 00
-
-#
-# Expected with receiving CAN message
-# LowBeam ~ On
-vcan0  3E9   [8]  00 00 00 00 00 00 00 00
-# LowBeam ~ Off
-vcan0  3E9   [8]  01 00 00 00 00 00 00 00
+# HVAC Fan Speed (0-100)
+setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed 75
+setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed 50
 ```
 
+#### VSS 3.x (Development)
+```bash
+kuksa-client grpc://127.0.0.1:55555
 
-## S32G - Build and Test
+# Light Controls
+setTargetValue Vehicle.Body.Lights.IsLowBeamOn true
+setTargetValue Vehicle.Body.Lights.IsBrakeOn true
+setTargetValue Vehicle.Body.Lights.IsHazardOn true
 
-### Prepare the docker image (arm64)
-```shell
-# Locally build for arm64
-docker buildx create --name dk_service_can_provider_build --use
-docker buildx use dk_service_can_provider_build
-docker buildx build --platform linux/arm64 -t dk_service_can_provider:arm64 --load .
+# Seat Position
+setTargetValue Vehicle.Cabin.Seat.Row1.Pos1.Position 5
+
+# HVAC Fan Speed
+setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Left.FanSpeed 75
+setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Right.FanSpeed 50
 ```
 
-### Deploy and run
-```shell
-# Interact with Orin - Update the Docker Local registry
-docker tag dk_service_can_provider:arm64 192.168.56.48:5000/dk_service_can_provider:arm64
-docker push 192.168.56.48:5000/dk_service_can_provider:arm64
+### Expected CAN Messages
+```bash
+# Low Beam On
+can1  3E9   [8]  01 00 00 00 00 00 00 00
 
-# Interact with S32G - pull the docker images from local host at Orin
-sshpass -p '' ssh -o StrictHostKeyChecking=no root@192.168.56.49 'docker pull 192.168.56.48:5000/dk_service_can_provider:arm64 ; mkdir -p ~/.dk/dk_installedservices'
-sshpass -p '' ssh -o StrictHostKeyChecking=no root@192.168.56.49 'docker image prune -f'
-# Interact with S32G - run the docker container
-sshpass -p '' ssh -o StrictHostKeyChecking=no root@192.168.56.49 'docker kill dk_service_can_provider;docker rm dk_service_can_provider'
-sshpass -p '' ssh -o StrictHostKeyChecking=no root@192.168.56.49 'docker run -d -it --name dk_service_can_provider --log-opt max-size=10m --log-opt max-file=3 --network host --privileged 192.168.56.48:5000/dk_service_can_provider:arm64'
-# Interact with S32G - check the running
-sshpass -p '' ssh -o StrictHostKeyChecking=no root@192.168.56.49 'docker ps'
-sshpass -p '' ssh -o StrictHostKeyChecking=no root@192.168.56.49 'docker logs dk_service_can_provider'
+# Hazard On  
+can1  3E9   [8]  04 00 00 00 00 00 00 00
+
+# Seat Position 5
+can1  3C3   [8]  14 00 00 00 00 00 00 00
+
+# HVAC Driver Fan 75%
+can1  20C   [8]  00 00 4B 00 0A 00 05 00
 ```
 
-### Check CAN Bus
+---
 
-```shell
-#
-# Test the CAN connection
-# LowBeam ~ On
-cansend can1 3E9#0000000000000000
-# LowBeam ~ Off
-cansend can1 3E9#0100000000000000
+## 🔍 Troubleshooting
+
+### Common Issues
+
+#### 1. Architecture Mismatch
+```bash
+# Check current architecture
+uname -m
+
+# Rebuild for correct architecture
+./build.sh local
 ```
 
+#### 2. CAN Interface Issues
+```bash
+# Check CAN interface
+ip link show can1        # Physical
+ip link show vcan0       # Virtual
 
+# Create virtual CAN
+sudo modprobe vcan
+sudo ip link add dev vcan0 type vcan
+sudo ip link set up vcan0
+```
 
+#### 3. KUKSA Connection Issues
+```bash
+# Test KUKSA connectivity
+telnet 192.168.56.48 55555  # Production
+telnet localhost 55555      # Local
 
+# Check KUKSA logs
+docker logs sdv-runtime
+```
+
+#### 4. k3s Deployment Issues
+```bash
+# Check k3s status
+sudo systemctl status k3s
+
+# Check node status
+kubectl get nodes
+
+# Check pod logs
+kubectl logs -l app=dk-service-can-provider
+
+# Check image import
+sudo k3s ctr images ls | grep dk_service_can_provider
+```
+
+#### 5. Mirror Job Issues
+```bash
+# Check mirror job logs
+kubectl logs job/mirror-dk-service-can-provider
+
+# Manually verify image
+sudo k3s ctr images ls | grep localhost:5000/dk_service_can_provider
+```
+
+---
+
+## 📚 File Structure
+
+```
+dk_service_can_provider/
+├── README.md                 # This file
+├── DEPLOYMENT.md            # Detailed deployment guide
+├── Dockerfile               # Container definition
+├── build.sh                 # Build script
+├── start.sh                 # Start script  
+├── stop.sh                  # Stop script
+├── manifests/               # k3s deployment files
+│   ├── mirror-local.yaml    # Local image mirror job
+│   ├── mirror-remote.yaml   # Remote image mirror job
+│   ├── deployment.yaml      # Service deployment
+│   └── service.yaml         # Service configuration
+├── prepare-dbc-file/        # DBC preparation scripts
+│   └── createvcan.sh        # Virtual CAN setup
+├── mapping/                 # VSS mapping files
+│   ├── vss_3.0/            # VSS 3.x mappings
+│   └── vss_4.0/            # VSS 4.x mappings
+├── config/                  # Configuration files
+│   └── dbc_feeder.ini       # DBC feeder configuration
+```
+
+---
+
+## 🚀 Quick Reference
+
+### Development Cycle
+```bash
+# 1. Choose your scenario
+./build.sh local           # Current architecture
+./build.sh prod            # Production ARM64
+
+# 2. Start service
+./start.sh local           # Development
+./start.sh prod --import   # Production with import
+
+# 3. Test and validate
+kuksa-client grpc://[address]:55555
+
+# 4. Stop and cleanup
+./stop.sh [env] --cleanup
+```
+
+### Production Release
+```bash
+# 1. Final testing on ARM64
+./build.sh local           # On Jetson Orin
+
+# 2. Create release
+./build.sh prod v1.0.0 --push
+
+# 3. Submit to marketplace
+# Use marketplace template with GHCR URL
+```
+
+This comprehensive guide ensures you can successfully develop, test, and deploy the dk_service_can_provider service across all scenarios and environments.

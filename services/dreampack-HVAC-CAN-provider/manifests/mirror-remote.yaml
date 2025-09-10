@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mirror-dk-service-can-provider-remote
+  namespace: default
+  labels:
+    app: dk-service-can-provider
+    component: mirror
+    source: remote
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300  # Clean up job after 5 minutes
+  template:
+    metadata:
+      labels:
+        app: dk-service-can-provider
+        component: mirror
+        source: remote
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/hostname: xip  # k3s agent node for image mirroring
+      restartPolicy: Never
+      containers:
+        - name: mirror-remote
+          image: quay.io/containers/skopeo:latest
+          command: ["skopeo", "copy"]
+          args:
+            - "--retry-times=3"
+            - "--all"
+            - "--dest-tls-verify=false"
+            - "docker://ghcr.io/YOUR_USERNAME/dk_service_can_provider:latest"  # From GHCR (update with your username)
+            - "docker://localhost:5000/dk_service_can_provider:latest"  # To k3s registry
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          env:
+            - name: SKOPEO_TMPDIR
+              value: "/tmp"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

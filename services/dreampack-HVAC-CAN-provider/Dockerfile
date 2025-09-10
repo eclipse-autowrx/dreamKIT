@@ -3,7 +3,7 @@ FROM python:3.10-slim-bookworm AS builder
 
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
-ARG KUKSA_TAG=0.4.3  # Default tag, override at build time
+ARG KUKSA_TAG=0.4.4  # Default tag, override at build time
 
 RUN echo "-- Running on $BUILDPLATFORM, building for $TARGETPLATFORM"
 
@@ -19,8 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone the kuksa-can-provider repo
-# RUN git clone --branch ${KUKSA_TAG} --depth 1 https://github.com/eclipse-kuksa/kuksa-can-provider.git
-RUN git clone https://github.com/eclipse-kuksa/kuksa-can-provider.git
+RUN git clone --branch ${KUKSA_TAG} --depth 1 https://github.com/eclipse-kuksa/kuksa-can-provider.git
 
 WORKDIR /build/kuksa-can-provider
 
