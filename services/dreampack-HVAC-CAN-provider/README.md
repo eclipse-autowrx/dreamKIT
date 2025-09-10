@@ -181,7 +181,7 @@ kubectl apply -f manifests/deployment.yaml
 ./build.sh prod v1.0.0 --push
 
 # 3. Verify image is public
-docker pull ghcr.io/samtranbosch/dk_service_can_provider:v1.0.0
+docker pull ghcr.io/eclipse-autowrx/dk_service_can_provider:v1.0.0
 
 # 4. Submit to marketplace with template
 ```
@@ -191,7 +191,7 @@ docker pull ghcr.io/samtranbosch/dk_service_can_provider:v1.0.0
 {
   "Target": "vip",
   "Platform": "linux/arm64",
-  "DockerImageURL": "ghcr.io/samtranbosch/dk_service_can_provider:latest",
+  "DockerImageURL": "ghcr.io/eclipse-autowrx/dk_service_can_provider:latest",
   "RuntimeCfg": {
     "CAN_PORT": "can1",
     "MAPPING_FILE": "mapping/vss_4.0/vss_dbc.json",
@@ -201,7 +201,7 @@ docker pull ghcr.io/samtranbosch/dk_service_can_provider:v1.0.0
 ```
 
 ### Configuration
-- **Public Image:** `ghcr.io/samtranbosch/dk_service_can_provider:latest`
+- **Public Image:** `ghcr.io/eclipse-autowrx/dk_service_can_provider:latest`
 - **Target Node:** `vip` (agent node with CAN access)
 - **Platform:** `linux/arm64`
 - **Runtime Config:** Production settings
@@ -293,7 +293,7 @@ Development (Local):
 Production (k3s):
 ┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
 │   S32G          │    │   k3s Pod    │    │   Jetson Orin   │
-│   (can1)        │◄──►│   (vip node) │◄──►│   KUKSA Server  │
+│   (can0/can1)   │◄──►│   (vip node) │◄──►│   KUKSA Server  │
 │                 │    │              │    │   (192.168.56.48)│
 └─────────────────┘    └──────────────┘    └─────────────────┘
 ```
@@ -304,8 +304,10 @@ Production (k3s):
 
 ### VSS Signal Testing
 
-#### VSS 4.x (Production)
+#### VSS 4.x (Default Model)
 ```bash
+kuksa-client grpc://127.0.0.1:55555
+# or
 kuksa-client grpc://192.168.56.48:55555
 
 # Light Controls
@@ -321,9 +323,11 @@ setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed 75
 setTargetValue Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed 50
 ```
 
-#### VSS 3.x (Development)
+#### VSS 3.x (Alternative Model)
 ```bash
 kuksa-client grpc://127.0.0.1:55555
+# or
+kuksa-client grpc://192.168.56.48:55555
 
 # Light Controls
 setTargetValue Vehicle.Body.Lights.IsLowBeamOn true
