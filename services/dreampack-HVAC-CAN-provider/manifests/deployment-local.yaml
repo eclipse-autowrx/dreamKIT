@@ -23,7 +23,7 @@ spec:
         version: latest
     spec:
       nodeSelector:
-        kubernetes.io/hostname: vip  # k3s agent node for service deployment
+        kubernetes.io/hostname: xip  # k3s agent node for service deployment
       hostNetwork: true
       restartPolicy: Always
       terminationGracePeriodSeconds: 60
@@ -49,49 +49,23 @@ spec:
               cpu: "300m"
           env:
             - name: CAN_PORT
-              value: "can1"
+              value: "vcan0"
             - name: KUKSA_ADDRESS
-              value: "192.168.56.48"
+              value: "localhost"
             - name: MAPPING_FILE
               value: "mapping/vss_4.0/vss_dbc.json"
             - name: LOG_LEVEL
               value: "INFO"
-            - name: DBC_FILE
-              value: "ModelCAN.dbc"
           securityContext:
             privileged: false
             readOnlyRootFilesystem: false
             runAsNonRoot: false
             allowPrivilegeEscalation: false
-            capabilities:
-              add:
-                - NET_RAW
-                - NET_ADMIN
           volumeMounts:
             - name: tmp
               mountPath: /tmp
             - name: var-tmp
               mountPath: /var/tmp
-          livenessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "ps aux | grep -v grep | grep -q dbcfeeder"
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
-          readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "ps aux | grep -v grep | grep -q dbcfeeder"
-            initialDelaySeconds: 15
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
       volumes:
         - name: tmp
           emptyDir: {}

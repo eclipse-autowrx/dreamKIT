@@ -168,27 +168,26 @@ start_prod() {
         fi
         
         # Apply deployment
-        if [ -f "manifests/deployment.yaml" ]; then
+        if [ "$use_local_image" = true ]; then
             print_info "Applying deployment..."
-            kubectl apply -f manifests/deployment.yaml
-            
-            # Wait for deployment to be ready
-            print_info "Waiting for deployment to be ready..."
-            kubectl wait --for=condition=available --timeout=300s deployment/dk-service-can-provider
-            
-            if [ $? -eq 0 ]; then
-                print_success "Deployment is ready"
-            else
-                print_error "Deployment failed or timed out"
-                kubectl describe deployment dk-service-can-provider
-                exit 1
-            fi
+            kubectl apply -f manifests/deployment-local.yaml
+            JOB_NAME="mirror-dk-service-can-provider-local"
+        else
+            print_info "Using remote image mirror job..."
+            kubectl apply -f manifests/deployment-remote.yaml
+            JOB_NAME="mirror-dk-service-can-provider-remote"
         fi
+
+        # Wait for deployment to be ready
+        print_info "Waiting for deployment to be ready..."
+        kubectl wait --for=condition=available --timeout=300s deployment/dk-service-can-provider
         
-        # Apply service if exists
-        if [ -f "manifests/service.yaml" ]; then
-            print_info "Applying service..."
-            kubectl apply -f manifests/service.yaml
+        if [ $? -eq 0 ]; then
+            print_success "Deployment is ready"
+        else
+            print_error "Deployment failed or timed out"
+            kubectl describe deployment dk-service-can-provider
+            exit 1
         fi
         
     else
