@@ -20,16 +20,17 @@ Rectangle {
         onUpdateWidget_lightCtr_highBeam: (sts) => {
             highbeamBtn.checked = sts
         }
+        onUpdateWidget_lightCtr_brake: (sts) => {
+            brakeLightBtn.checked = sts
+        }
         onUpdateWidget_lightCtr_Hazard: (sts) => {
             hazardBtn.checked = sts
         }
         onUpdateWidget_hvac_driverSide_FanSpeed: (speed) => {
-            // Convert 0-10 range to 0-100 percentage
-            driverFanSlider.value = speed * 10
+            driverFanSlider.value = speed
         }
         onUpdateWidget_hvac_passengerSide_FanSpeed: (speed) => {
-            // Convert 0-10 range to 0-100 percentage
-            passengerFanSlider.value = speed * 10
+            passengerFanSlider.value = speed
         }
         onUpdateWidget_seat_driverSide_position: (position) => {
             seatLevels.currentLevel = position
@@ -332,6 +333,57 @@ Rectangle {
                     }
                 }
 
+                // Brake Lights
+                Rectangle {
+                    width: 14
+                    height: 10
+                    radius: 5
+                    color: brakeLightBtn.checked ? "#FFD700" : "transparent"
+                    border.color: brakeLightBtn.checked ? "#FFD700" : "#404040"
+                    border.width: 1
+                    x: 63   // Left rear
+                    y: 400  // Back of car
+                                        
+                    Behavior on color { ColorAnimation { duration: 300 } }
+                    
+                    // Inner glow for active state
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width - 4
+                        height: parent.height - 4
+                        radius: parent.radius - 2
+                        color: lowbeamBtn.checked || highbeamBtn.checked ? "#FFFFFF" : "transparent"
+                        opacity: 0.7
+                        
+                        Behavior on color { ColorAnimation { duration: 300 } }
+                    }
+                }
+
+                Rectangle {
+                    width: 14
+                    height: 10
+                    radius: 5
+                    color: brakeLightBtn.checked ? "#FFD700" : "transparent"
+                    border.color: brakeLightBtn.checked ? "#FFD700" : "#404040"
+                    border.width: 1
+                    x: 163  // Right rear
+                    y: 400  // Back of car
+                                        
+                    Behavior on color { ColorAnimation { duration: 300 } }
+                    
+                    // Inner glow for active state
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width - 4
+                        height: parent.height - 4
+                        radius: parent.radius - 2
+                        color: lowbeamBtn.checked || highbeamBtn.checked ? "#FFFFFF" : "transparent"
+                        opacity: 0.7
+                        
+                        Behavior on color { ColorAnimation { duration: 300 } }
+                    }
+                }
+
                 // Elegant seat activity indicator
                 Rectangle {
                     width: 8
@@ -408,6 +460,7 @@ Rectangle {
                         width: parent.width
                         spacing: 15
 
+
                         // Custom ToggleButton for Low Beam
                         Rectangle {
                             id: lowbeamBtn
@@ -449,51 +502,7 @@ Rectangle {
                                 }
                             }
                         }
-
-                        // Custom ToggleButton for High Beam
-                        Rectangle {
-                            id: highbeamBtn
-                            property bool checked: false
-                            width: parent.width
-                            height: 60
-                            radius: 10
-                            color: checked ? "#00D4AA" : "#2A2A2A"
-                            border.color: checked ? "#00D4AA" : "#404040"
-                            border.width: 2
-                            
-                            Row {
-                                anchors.centerIn: parent
-                                spacing: 10
-                                
-                                Rectangle {
-                                    width: 12
-                                    height: 8
-                                    radius: 4
-                                    color: highbeamBtn.checked ? "#FFD700" : "#404040"
-                                    border.color: highbeamBtn.checked ? "#FFD700" : "transparent"
-                                    border.width: highbeamBtn.checked ? 2 : 0
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-                                
-                                Text {
-                                    text: "High Beam"
-                                    color: highbeamBtn.checked ? "#000000" : "#FFFFFF"
-                                    font.pixelSize: 16
-                                    font.family: "Segoe UI"
-                                    font.weight: Font.Medium
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
-                            }
-                            
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    highbeamBtn.checked = !highbeamBtn.checked
-                                    controlPageAsync.qml_setApi_lightCtr_HighBeam(highbeamBtn.checked)
-                                }
-                            }
-                        }
-
+                        
                         // Custom ToggleButton for Hazard Lights
                         Rectangle {
                             id: hazardBtn
@@ -541,6 +550,61 @@ Rectangle {
                                     controlPageAsync.qml_setApi_lightCtr_Hazard(hazardBtn.checked)
                                 }
                             }
+                        }
+                        // Custom ToggleButton for Brake Lights
+                        Rectangle {
+                            id: brakeLightBtn
+                            property bool checked: false
+                            width: parent.width
+                            height: 60
+                            radius: 10
+                            color: checked ? "#00D4AA" : "#2A2A2A"
+                            border.color: checked ? "#00D4AA" : "#404040"
+                            border.width: 2
+                            
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 10
+                                
+                                Rectangle {
+                                    width: 12
+                                    height: 8
+                                    radius: 4
+                                    color: brakeLightBtn.checked ? "#FFD700" : "#404040"
+                                    border.color: brakeLightBtn.checked ? "#FFD700" : "transparent"
+                                    border.width: brakeLightBtn.checked ? 2 : 0
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                
+                                Text {
+                                    text: "Brake Lights"
+                                    color: brakeLightBtn.checked ? "#000000" : "#FFFFFF"
+                                    font.pixelSize: 16
+                                    font.family: "Segoe UI"
+                                    font.weight: Font.Medium
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                            
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    brakeLightBtn.checked = !brakeLightBtn.checked
+                                    controlPageAsync.qml_setApi_lightCtr_Brake(brakeLightBtn.checked)
+                                }
+                            }
+                        }
+
+                        // Custom ToggleButton for High Beam
+                        Rectangle {
+                            id: highbeamBtn
+                            property bool checked: false
+                            width: parent.width
+                            height: 60
+                            radius: 10
+                            color: checked ? "#00D4AA" : "#2A2A2A"
+                            border.color: checked ? "#00D4AA" : "#404040"
+                            border.width: 2
                         }
                     }
                 }
@@ -594,14 +658,13 @@ Rectangle {
                                 id: driverFanSlider
                                 width: parent.width
                                 from: 0
-                                stepSize: 10
+                                stepSize: 1
                                 to: 100
                                 value: 0
 
                                 onValueChanged: {
                                     if (pressed) {
-                                        // Convert percentage to 0-10 range for backend
-                                        let backendValue = Math.round(value / 10)
+                                        let backendValue = Math.round(value)
                                         controlPageAsync.qml_setApi_hvac_driverSide_FanSpeed(backendValue)
                                     }
                                 }
@@ -654,14 +717,13 @@ Rectangle {
                                 id: passengerFanSlider
                                 width: parent.width
                                 from: 0
-                                stepSize: 10
+                                stepSize: 1
                                 to: 100
                                 value: 0
 
                                 onValueChanged: {
                                     if (pressed) {
-                                        // Convert percentage to 0-10 range for backend
-                                        let backendValue = Math.round(value / 10)
+                                        let backendValue = Math.round(value)
                                         controlPageAsync.qml_setApi_hvac_passengerSide_FanSpeed(backendValue)
                                     }
                                 }
@@ -800,10 +862,10 @@ Rectangle {
                                     }
                                 }
 
-                                // Level 2 Button
+                                // Level 5 Button
                                 Rectangle {
-                                    id: seatLevel2
-                                    property bool checked: seatLevels.currentLevel === 2
+                                    id: seatLevel5
+                                    property bool checked: seatLevels.currentLevel === 5
                                     width: 60
                                     height: 60
                                     radius: 10
@@ -813,8 +875,8 @@ Rectangle {
                                     
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "2"
-                                        color: seatLevel2.checked ? "#000000" : "#FFFFFF"
+                                        text: "5"
+                                        color: seatLevel5.checked ? "#000000" : "#FFFFFF"
                                         font.pixelSize: 20
                                         font.bold: true
                                     }
@@ -822,16 +884,16 @@ Rectangle {
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            seatLevels.currentLevel = 2
-                                            controlPageAsync.qml_setApi_seat_driverSide_position(2)
+                                            seatLevels.currentLevel = 5
+                                            controlPageAsync.qml_setApi_seat_driverSide_position(5)
                                         }
                                     }
                                 }
 
-                                // Level 3 Button
+                                // Level 10 Button
                                 Rectangle {
-                                    id: seatLevel3
-                                    property bool checked: seatLevels.currentLevel === 3
+                                    id: seatLevel10
+                                    property bool checked: seatLevels.currentLevel === 10
                                     width: 60
                                     height: 60
                                     radius: 10
@@ -841,8 +903,8 @@ Rectangle {
                                     
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "3"
-                                        color: seatLevel3.checked ? "#000000" : "#FFFFFF"
+                                        text: "10"
+                                        color: seatLevel10.checked ? "#000000" : "#FFFFFF"
                                         font.pixelSize: 20
                                         font.bold: true
                                     }
@@ -850,8 +912,8 @@ Rectangle {
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            seatLevels.currentLevel = 3
-                                            controlPageAsync.qml_setApi_seat_driverSide_position(3)
+                                            seatLevels.currentLevel = 10
+                                            controlPageAsync.qml_setApi_seat_driverSide_position(10)
                                         }
                                     }
                                 }

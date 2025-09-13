@@ -3,11 +3,14 @@ cmake_minimum_required(VERSION 3.16)
 project(untitled2 VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS "-fpermissive")
 
-find_package(Qt6 6.2 REQUIRED COMPONENTS Quick)
+find_package(Qt6 6.2 REQUIRED COMPONENTS Quick Concurrent)
 
 
 qt_add_executable(dk_ivi
@@ -15,11 +18,21 @@ qt_add_executable(dk_ivi
     controls/controls.cpp
     digitalauto/digitalauto.cpp
     marketplace/marketplace.cpp
-    marketplace/fetching.cpp
     installedservices/installedservices.cpp
-    installedservices/unsafeparamcheck.cpp
+    installedservices/installedcheckthread.cpp
     installedvapps/installedvapps.cpp
-    library/vapiclient/vapiclient.cpp
+    platform/async/asyncjob.cpp
+    platform/data/datamanager.cpp
+    platform/data/fetching.cpp
+    platform/data/jsonstorage.cpp
+    platform/data/appserializer.cpp
+    platform/integrations/kubernetes/manifestbuilder.cpp
+    platform/integrations/kubernetes/installer.cpp
+    platform/integrations/kubernetes/jobmanager.cpp
+    platform/integrations/vehicle-api/vapiclient.cpp
+    platform/monitoring/wlanmonitor.cpp
+    platform/monitoring/autorestartmanager.cpp
+    platform/notifications/notificationmanager.cpp
 )
 
 qt_add_qml_module(dk_ivi
@@ -32,9 +45,15 @@ qt_add_qml_module(dk_ivi
         controls/ModeControl.qml
         controls/ToggleButton.qml
         digitalauto/digitalauto.qml
+        marketplace/AppCard.qml
+        marketplace/AppGrid.qml
+        marketplace/CategoryBar.qml
+        marketplace/ConfirmDialog.qml
         marketplace/marketplace.qml
+        marketplace/SearchBar.qml
         installedservices/installedservices.qml
         installedvapps/installedvapps.qml
+        platform/notifications/notificationoverlay.qml
         resource/customwidgets/CustomBtn1.qml
         resource/customwidgets/CustomBtn2.qml
         resource/customwidgets/IconBtn1.qml
@@ -110,7 +129,7 @@ set_target_properties(KuksaClient PROPERTIES
 )
 
 target_link_libraries(dk_ivi
-    PRIVATE Qt6::Quick KuksaClient
+    PRIVATE Qt6::Quick Qt6::Concurrent KuksaClient
 )
 
 install(TARGETS dk_ivi

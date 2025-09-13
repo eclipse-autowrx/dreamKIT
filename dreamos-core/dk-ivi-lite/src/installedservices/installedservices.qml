@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../resource/customwidgets"
-import ServicesAsync 1.0
+import VsersAsync 1.0
 
 Rectangle {
     id: installedservices_page
@@ -21,7 +21,7 @@ Rectangle {
 
     Component.onCompleted: {
         appListModel.clear()
-        appAsync.initInstalledServicesFromDB()
+        appAsync.initInstalledFromDB()
     }
 
     function findChildByObjectName(parent, objectName) {
@@ -36,7 +36,7 @@ Rectangle {
         return null;
     }
 
-    ServicesAsync {
+    VsersAsync {
         id: appAsync
 
         onClearServicesListView: {
@@ -81,10 +81,12 @@ Rectangle {
         }
 
         onUpdateServicesRunningSts: (appId, isStarted, idx) => {
-            var chkItem = appListView.itemAtIndex(idx);
-            var foundChild = findChildByObjectName(chkItem, appId);
-            if (foundChild) {
-                foundChild.checked = isStarted;
+            if (appId !== "") {
+                var chkItem = appListView.itemAtIndex(idx);
+                var foundChild = findChildByObjectName(chkItem, appId);
+                if (foundChild) {
+                    foundChild.checked = isStarted;
+                }
             }
         }
     }

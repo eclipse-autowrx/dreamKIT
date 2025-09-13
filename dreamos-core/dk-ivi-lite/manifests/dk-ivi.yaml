@@ -1,0 +1,166 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dk-ivi
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dk-ivi
+  template:
+    metadata:
+      labels:
+        app: dk-ivi
+    spec:
+      serviceAccountName: dk-ivi-service-account
+      nodeSelector:
+        kubernetes.io/hostname: xip
+      hostNetwork: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+      # Init container to wait for sdv-runtime
+      initContainers:
+      - name: wait-for-sdv-runtime
+        image: bitnami/kubectl:latest
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c']
+        args:
+        - |
+          set -e
+          echo "Starting in offline mode - using local images only"
+          echo "Checking kubectl permissions..."
+          
+          # Test permissions with timeout to avoid hanging
+          timeout 10s kubectl auth can-i get deployments || { 
+            echo "Warning: No permission to get deployments, continuing anyway..."; 
+          }
+          timeout 10s kubectl auth can-i get pods || { 
+            echo "Warning: No permission to get pods, continuing anyway..."; 
+          }
+          
+          echo "Checking for sdv-runtime deployment..."
+          if timeout 30s kubectl get deployment sdv-runtime >/dev/null 2>&1; then
+            echo "SDV Runtime deployment found, waiting for it to be available..."
+            
+            # Wait with shorter timeout and better error handling
+            if timeout 180s kubectl wait --for=condition=available --timeout=180s deployment/sdv-runtime; then
+              echo "SDV Runtime deployment is available"
+              
+              echo "Waiting for sdv-runtime pod to be ready..."
+              if timeout 120s kubectl wait --for=condition=ready --timeout=120s pod -l app=sdv-runtime; then
+                echo "SDV Runtime pod is ready"
+              else
+                echo "Warning: SDV Runtime pod not ready, but continuing..."
+                kubectl get pods -l app=sdv-runtime || true
+              fi
+            else
+              echo "Warning: SDV Runtime deployment not available, but continuing..."
+              kubectl describe deployment sdv-runtime || true
+            fi
+          else
+            echo "SDV Runtime deployment not found - this might be expected"
+            echo "Continuing with IVI interface startup..."
+          fi
+          
+          echo "Init container completed successfully"
+        
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+        volumeMounts:
+        - name: kubectl-binary
+          mountPath: /usr/local/bin/kubectl
+          readOnly: true
+        - name: kube-config
+          mountPath: /root/.kube/config
+          readOnly: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: dk-home
+        hostPath: 
+          path: /home/developer/.dk
+          type: DirectoryOrCreate
+      - name: x11-unix
+        hostPath: 
+          path: /tmp/.X11-unix
+          type: Directory
+      - name: dri
+        hostPath: { path: /dev/dri }
+      - name: kubectl-binary
+        hostPath:
+          path: /usr/local/bin/kubectl
+          type: File
+      - name: kube-config
+        hostPath:
+          path: /home/developer/.kube/config
+          type: File
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: docker-binary
+        hostPath:
+          path: /usr/bin/docker
+          type: File
+      containers:
+      - name: dk-ivi
+        image: docker.io/library/dk_ivi:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+          privileged: false
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_ADMIN
+        env:
+        - name: DISPLAY
+          value: ":0"
+        - name: XDG_RUNTIME_DIR
+          value: "/run/user/1000"
+        - name: QT_QUICK_BACKEND
+          value: "software"
+        - name: DKCODE
+          value: "dreamKIT"
+        - name: DK_USER
+          value: "developer"
+        - name: DK_VIP
+          value: ""
+        - name: DK_DOCKER_HUB_NAMESPACE
+          value: "ghcr.io/samtranbosch"
+        - name: DK_ARCH
+          value: "amd64"
+        - name: DK_CONTAINER_ROOT
+          value: "/app/.dk/"
+        - name: KUBECONFIG
+          value: "/root/.kube/config"
+        volumeMounts:
+        - name: dk-home
+          mountPath: /app/.dk
+        - name: x11-unix
+          mountPath: /tmp/.X11-unix
+        - name: dri
+          mountPath: /dev/dri
+        - name: kubectl-binary
+          mountPath: /usr/local/bin/kubectl
+          readOnly: true
+        - name: kube-config
+          mountPath: /root/.kube/config
+          readOnly: true
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: docker-binary
+          mountPath: /usr/bin/docker
+          readOnly: true

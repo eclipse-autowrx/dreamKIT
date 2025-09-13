@@ -1,86 +1,57 @@
-#ifndef INSTALLEDVAPPS_H
-#define INSTALLEDVAPPS_H
+#pragma once
+#include "../installedservices/installedasyncbase.hpp"
 
-#include <QObject>
-#include <QTextStream>
-#include <QFile>
-#include "QString"
-#include <QThread>
-#include <QList>
-#include <QFileSystemWatcher>
-#include <QTimer>
-
-typedef struct {
-    QString id;
-    QString category;
-    QString name;
-    QString author;
-    QString rating;
-    QString noofdownload;
-    QString iconPath;
-    QString foldername;
-    QString packagelink;
-    bool isInstalled;
-    bool isSubscribed;
-} VappsListStruct;
-
-void readServicesList(const QString searchName, QList<VappsListStruct> &VappsListInfo);
-
-
-class VappsAsync;
-
-class InstalledVappsCheckThread : public QThread
+/* DTO */
+struct VappsListStruct
 {
-    Q_OBJECT
-
-public:
-    InstalledVappsCheckThread(VappsAsync *parent);
-    void run();
-    void triggerCheckAppStart(QString id, QString name);
-
-Q_SIGNALS:
-    void resultReady(QString appId, bool isStarted, QString msg);
-
-private:
-    QString m_appId;
-    QString m_appName;
-    bool m_istriggeredAppStart = false;
-    VappsAsync *m_serviceAsync = nullptr;
-    QFileSystemWatcher *m_filewatcher = nullptr;
+    QString id,category,name,author,rating,noofdownload,
+            iconPath,foldername,packagelink;
+    bool    isInstalled=false, isSubscribed=false;
 };
+Q_DECLARE_METATYPE(VappsListStruct)
 
-class VappsAsync: public QObject
+class VappsAsync : public InstalledAsyncBase<VappsListStruct,VappsAsync>
 {
     Q_OBJECT
+    Q_PROPERTY(bool workerNodeOnline READ workerNodeOnline
+               NOTIFY workerNodeStatusChanged)
 public:
-    VappsAsync();
+    explicit VappsAsync(QObject *p=nullptr) : InstalledAsyncBase(p) {}
 
-    Q_INVOKABLE void initInstalledVappsFromDB();
+    /* identity ---------------------------------------------------- */
+    QString dbKey()      const override { return "vehicle";     }
+    QString fileName()   const override { return "vehicle-app"; }
+    QString folderRoot() const override
+    { return DK_CONTAINER_ROOT + "dk_marketplace/"; }
+    QString deploymentYaml(const QString &id) const override
+    { return QString("%1/%2/%2_deployment.yaml").arg(folderRoot(),id); }
 
-    Q_INVOKABLE void executeServices(int appIdx, const QString name, const QString appId, bool isSubscribed);
+    /* ---------- QML-visible wrappers ---------------------------- */
+    Q_INVOKABLE void initInstalledFromDB()             { InstalledAsyncBase::initInstalledFromDB(); }
+    Q_INVOKABLE void executeServices(int i,const QString &n,const QString &id,bool sub)
+                                                    { InstalledAsyncBase::executeServices(i,n,id,sub); }
+    Q_INVOKABLE void removeServices(int i)           { InstalledAsyncBase::removeServices(i); }
+    Q_INVOKABLE void openAppEditor(int idx) { launchVsCode(idx); }    
+    
+    /* slot needed by InstalledCheckThread string-connect */
+    Q_SLOT void fileChanged(const QString &p)         { InstalledAsyncBase::fileChanged(p); }
 
-    Q_INVOKABLE void removeServices(const int index);
-
-    Q_INVOKABLE void openAppEditor(int idx);
-
-Q_SIGNALS:
-    void appendServicesInfoToServicesList(QString name, QString author, QString rating, QString noofdownload, QString icon, bool isInstalled, QString appId, bool isSubscribed);
-    void appendLastRowToServicesList(const int noOfServicess);
+signals:
+    void workerNodeStatusChanged(bool);
     void clearServicesListView();
-    void updateStartAppMsg(QString appId, bool isStarted, QString msg);
-    void updateServicesRunningSts(QString appId, bool isStarted, int idx);
+    void appendServicesInfoToServicesList(QString,QString,QString,QString,
+                                          QString,bool,QString,bool);
+    void appendLastRowToServicesList(int);
+    void updateServicesRunningSts(QString,bool,int);
+    void updateStartAppMsg(QString,bool,QString);
 
-public Q_SLOTS:
-    void handleResults(QString appId, bool isStarted, QString msg);
-    void fileChanged(const QString& path);
-    void checkRunningAppSts();
+public slots:
+    void handleResults(QString id,bool ok,QString msg)
+    { emit updateStartAppMsg(id,ok,msg); }
 
-private:
-    QList<VappsListStruct> installedVappsList;
-    InstalledVappsCheckThread *m_workerThread;
-    QTimer *m_timer_apprunningcheck;
-
-    void removeObjectById(const QString &filePath, const QString &idToRemove);
+protected:
+    void appendItemToQml(const VappsListStruct &it) override
+    { emit appendServicesInfoToServicesList(it.name,it.author,it.rating,
+                                            it.noofdownload,it.iconPath,
+                                            it.isInstalled,it.id,it.isSubscribed); }
 };
-
-#endif //INSTALLEDVAPPS_H

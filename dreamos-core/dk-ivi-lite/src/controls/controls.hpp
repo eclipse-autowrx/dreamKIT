@@ -23,6 +23,7 @@ public:
     // Lighting controls
     Q_INVOKABLE void qml_setApi_lightCtr_LowBeam(bool sts);
     Q_INVOKABLE void qml_setApi_lightCtr_HighBeam(bool sts);
+    Q_INVOKABLE void qml_setApi_lightCtr_Brake(bool sts);
     Q_INVOKABLE void qml_setApi_lightCtr_Hazard(bool sts);
     // Seat controls
     Q_INVOKABLE void qml_setApi_seat_driverSide_position(int position);
@@ -36,6 +37,7 @@ Q_SIGNALS:
     // Lighting signals
     void updateWidget_lightCtr_lowBeam(bool sts);
     void updateWidget_lightCtr_highBeam(bool sts);
+    void updateWidget_lightCtr_brake(bool sts);
     void updateWidget_lightCtr_Hazard(bool sts);
     // Seat signals
     void updateWidget_seat_driverSide_position(int position);

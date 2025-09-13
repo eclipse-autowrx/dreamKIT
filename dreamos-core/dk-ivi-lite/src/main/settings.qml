@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import NotificationManager 1.0
 
 Rectangle {
     id: settings_page
@@ -11,345 +12,146 @@ Rectangle {
     Component.onCompleted: {
         headerAnimation.start()
         menuAnimation.start()
-        backgroundAnimation.start()
     }
 
-    // Enhanced animated background system
-    Item {
-        id: backgroundAnimationSystem
+    // Simplified static background - removed all dynamic animations
+    Rectangle {
         anchors.fill: parent
-        z: -3
-        
-        // Professional gradient mesh background
-        Rectangle {
-            anchors.fill: parent
-            gradient: Gradient {
-                orientation: Gradient.Vertical
-                GradientStop { position: 0.0; color: "#0A0A0A" }
-                GradientStop { position: 0.3; color: "#0F0F0F" }
-                GradientStop { position: 0.7; color: "#0F0F0F" }
-                GradientStop { position: 1.0; color: "#1A1A1A" }
-            }
+        gradient: Gradient {
+            orientation: Gradient.Vertical
+            GradientStop { position: 0.0; color: "#0A0A0A" }
+            GradientStop { position: 0.3; color: "#0F0F0F" }
+            GradientStop { position: 0.7; color: "#0F0F0F" }
+            GradientStop { position: 1.0; color: "#1A1A1A" }
         }
+    }
+
+    // Static grid pattern - no animations
+    Canvas {
+        id: staticGridPattern
+        anchors.fill: parent
+        opacity: 0.05
         
-        // Dynamic floating geometric elements with dramatic animations
-        Repeater {
-            model: 12
-            
-            Rectangle {
-                id: geometricElement
-                width: 8 + Math.random() * 20
-                height: width
-                radius: index % 3 === 0 ? 0 : width / 2  // Mix of circles and squares
-                color: "#00D4AA"
-                opacity: 0.1 + Math.random() * 0.2
-                x: Math.random() * parent.width
-                y: Math.random() * parent.height
-                rotation: Math.random() * 360
-                
-                property real driftSpeed: 8 + Math.random() * 12
-                
-                // Dramatic orbital movement
-                SequentialAnimation on x {
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: geometricElement.x + 400 + Math.random() * 300
-                        duration: geometricElement.driftSpeed * 1000
-                        easing.type: Easing.InOutBack
-                    }
-                    NumberAnimation {
-                        to: geometricElement.x - 400 - Math.random() * 300
-                        duration: geometricElement.driftSpeed * 1000
-                        easing.type: Easing.InOutBack
-                    }
-                }
-                
-                SequentialAnimation on y {
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: geometricElement.y + 300 + Math.random() * 200
-                        duration: (geometricElement.driftSpeed + 3) * 1000
-                        easing.type: Easing.InOutBack
-                    }
-                    NumberAnimation {
-                        to: geometricElement.y - 300 - Math.random() * 200
-                        duration: (geometricElement.driftSpeed + 3) * 1000
-                        easing.type: Easing.InOutBack
-                    }
-                }
-                
-                // Fast rotation animation
-                RotationAnimation on rotation {
-                    loops: Animation.Infinite
-                    from: 0
-                    to: 360
-                    duration: 3000 + Math.random() * 4000
-                    easing.type: Easing.Linear
-                }
-                
-                // Dramatic pulsing with scaling
-                SequentialAnimation on opacity {
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: 0.4
-                        duration: 1500 + Math.random() * 1000
-                        easing.type: Easing.InOutElastic
-                    }
-                    NumberAnimation {
-                        to: 0.05
-                        duration: 1500 + Math.random() * 1000
-                        easing.type: Easing.InOutElastic
-                    }
-                }
-                
-                // Scale pulsing effect
-                SequentialAnimation on scale {
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: 1.5
-                        duration: 2000 + Math.random() * 1500
-                        easing.type: Easing.InOutBounce
-                    }
-                    NumberAnimation {
-                        to: 0.5
-                        duration: 2000 + Math.random() * 1500
-                        easing.type: Easing.InOutBounce
-                    }
-                }
-            }
-        }
+        Component.onCompleted: requestPaint()
         
-        // Professional grid pattern overlay
-        Canvas {
-            id: gridPattern
-            anchors.fill: parent
-            opacity: 0.02
+        onPaint: {
+            var ctx = getContext("2d")
+            ctx.strokeStyle = "#00D4AA"
+            ctx.lineWidth = 0.5
             
-            onPaint: {
-                var ctx = getContext("2d")
-                ctx.strokeStyle = "#00D4AA"
-                ctx.lineWidth = 0.5
-                
-                var spacing = 80
-                
-                // Vertical lines
-                for (var x = 0; x < width; x += spacing) {
-                    ctx.beginPath()
-                    ctx.moveTo(x, 0)
-                    ctx.lineTo(x, height)
-                    ctx.stroke()
-                }
-                
-                // Horizontal lines
-                for (var y = 0; y < height; y += spacing) {
-                    ctx.beginPath()
-                    ctx.moveTo(0, y)
-                    ctx.lineTo(width, y)
-                    ctx.stroke()
-                }
+            var spacing = 80
+            
+            // Vertical lines
+            for (var x = 0; x < width; x += spacing) {
+                ctx.beginPath()
+                ctx.moveTo(x, 0)
+                ctx.lineTo(x, height)
+                ctx.stroke()
             }
             
-            // Dynamic grid animation with scaling
-            SequentialAnimation on opacity {
-                loops: Animation.Infinite
-                NumberAnimation { to: 0.15; duration: 2000; easing.type: Easing.InOutElastic }
-                NumberAnimation { to: 0.02; duration: 2000; easing.type: Easing.InOutElastic }
-            }
-            
-            SequentialAnimation on scale {
-                loops: Animation.Infinite
-                NumberAnimation { to: 1.05; duration: 3000; easing.type: Easing.InOutBounce }
-                NumberAnimation { to: 0.95; duration: 3000; easing.type: Easing.InOutBounce }
+            // Horizontal lines
+            for (var y = 0; y < height; y += spacing) {
+                ctx.beginPath()
+                ctx.moveTo(0, y)
+                ctx.lineTo(width, y)
+                ctx.stroke()
             }
         }
     }
 
-    // Enhanced corner particle animation
+    // Reduced corner particles - only show when hovered/active
     Item {
         id: cornerParticles
         anchors.top: parent.top
         anchors.right: parent.right
         width: parent.width * 0.3
         height: parent.height * 0.4
-        opacity: 0.2
-        z: -2
-
-        // Dramatic floating particles
+        opacity: 0.1
+        
+        // Reduced from 25 to 8 particles
         Repeater {
-            model: 25
+            model: 8
             Rectangle {
-                id: particle
-                width: Math.random() * 8 + 3
+                width: 4 + Math.random() * 6
                 height: width
                 radius: width / 2
                 color: "#00D4AA"
-                opacity: Math.random() * 0.3 + 0.1
+                opacity: 0.2 + Math.random() * 0.2
                 x: Math.random() * parent.width
                 y: Math.random() * parent.height
-
-                // Dramatic floating movement
-                SequentialAnimation on y {
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: particle.y - 150 - Math.random() * 200
-                        duration: 2000 + Math.random() * 2000
-                        easing.type: Easing.InOutElastic
-                    }
-                    NumberAnimation {
-                        to: particle.y + 150 + Math.random() * 200
-                        duration: 2000 + Math.random() * 2000
-                        easing.type: Easing.InOutElastic
-                    }
-                }
-
-                SequentialAnimation on x {
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: particle.x - 100 - Math.random() * 150
-                        duration: 2500 + Math.random() * 2500
-                        easing.type: Easing.InOutElastic
-                    }
-                    NumberAnimation {
-                        to: particle.x + 100 + Math.random() * 150
-                        duration: 2500 + Math.random() * 2500
-                        easing.type: Easing.InOutElastic
-                    }
-                }
-
-                SequentialAnimation on opacity {
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: 0.6
-                        duration: 1500 + Math.random() * 1000
-                        easing.type: Easing.InOutBounce
-                    }
-                    NumberAnimation {
-                        to: 0.1
-                        duration: 1500 + Math.random() * 1000
-                        easing.type: Easing.InOutBounce
-                    }
-                }
                 
-                // Scale pulsing
-                SequentialAnimation on scale {
+                // Only animate when settings page becomes active
+                property bool shouldAnimate: settings_page.visible
+                
+                // Slower, less frequent animations
+                SequentialAnimation on y {
+                    running: parent.parent.shouldAnimate && index < 4 // Only animate half
                     loops: Animation.Infinite
                     NumberAnimation {
-                        to: 2.0
-                        duration: 1800 + Math.random() * 1200
-                        easing.type: Easing.InOutBack
+                        to: parent.y - 50
+                        duration: 8000 // Much slower
+                        easing.type: Easing.InOutQuad
                     }
                     NumberAnimation {
-                        to: 0.3
-                        duration: 1800 + Math.random() * 1200
-                        easing.type: Easing.InOutBack
+                        to: parent.y + 50
+                        duration: 8000
+                        easing.type: Easing.InOutQuad
                     }
                 }
             }
         }
-
-        NumberAnimation {
-            id: backgroundAnimation
-            target: cornerParticles
-            property: "opacity"
-            from: 0
-            to: 0.6
-            duration: 1500
-            easing.type: Easing.OutElastic
-        }
     }
 
-    // Enhanced header area with premium styling
+    // Header area - simplified
     Rectangle {
         id: headerBackground
         x: 0
         y: 0
         width: parent.width
         height: 100
-        z: 1
+        color: "#1A1A1A"
         
-        // Modern gradient background
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop { position: 0.0; color: "#1A1A1A" }
-            GradientStop { position: 0.3; color: "#0F0F0F" }
-            GradientStop { position: 0.7; color: "#0F0F0F" }
-            GradientStop { position: 1.0; color: "#1A1A1A" }
-        }
-        
-        // Animated accent line
+        // Static accent line - no animation
         Rectangle {
-            id: headerAccentLine
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 20
-            width: 0
+            width: 200
             height: 3
             color: "#00D4AA"
             radius: 1.5
             x: 32
-            
-            NumberAnimation {
-                id: headerAccentAnimation
-                target: headerAccentLine
-                property: "width"
-                from: 0
-                to: 200
-                duration: 1500
-                easing.type: Easing.OutCubic
-            }
         }
         
-        // Animated bottom border
+        // Static border
         Rectangle {
-            id: headerBorder
             anchors.bottom: parent.bottom
-            width: 0
+            width: settings_page.width
             height: 1
             color: "#2A2A2A"
-            
-            NumberAnimation {
-                id: headerBorderAnimation
-                target: headerBorder
-                property: "width"
-                from: 0
-                to: settings_page.width
-                duration: 1200
-                easing.type: Easing.OutCubic
-            }
         }
     }
 
-    // Premium dreamKIT text with enhanced styling
+    // Simplified dreamKIT text
     Item {
         id: dreamKitContainer
         x: 32
         y: 20
         width: 300
         height: 60
-        z: 2
 
-        // Animated background glow
+        // Static background glow
         Rectangle {
-            id: textGlow
             anchors.centerIn: parent
             width: parent.width + 40
             height: parent.height + 20
             radius: 15
             color: "#00D4AA"
-            opacity: 0
-            scale: 1.2
-            
-            SequentialAnimation on opacity {
-                id: glowAnimation
-                loops: Animation.Infinite
-                NumberAnimation { to: 0.12; duration: 3500; easing.type: Easing.InOutSine }
-                NumberAnimation { to: 0.06; duration: 3500; easing.type: Easing.InOutSine }
-            }
+            opacity: 0.08 // Static opacity
         }
 
-        // Premium "dreamKIT" text
         Text {
             id: settings_page_header_text
-            text: "dreamKIT v1.0"
+            text: "dreamKIT v1.11"
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             font.bold: true
@@ -360,7 +162,7 @@ Rectangle {
             font.letterSpacing: 2
             opacity: 0
 
-            // Animated text shadow effect using multiple text layers
+            // Static shadow - no animation
             Text {
                 anchors.fill: parent
                 text: parent.text
@@ -372,100 +174,15 @@ Rectangle {
                 z: -1
             }
 
-            Text {
-                anchors.fill: parent
-                text: parent.text
-                font: parent.font
-                color: "#00D4AA"
-                opacity: 0.2
-                scale: 1.02
-                z: -2
-            }
-
-            // Header slide-in animation
+            // Simple fade-in only
             NumberAnimation {
                 id: headerAnimation
                 target: settings_page_header_text
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: 1000
+                duration: 800
                 easing.type: Easing.OutCubic
-                
-                onFinished: {
-                    headerBorderAnimation.start()
-                    headerAccentAnimation.start()
-                    glowPulse.start()
-                    breathingOpacity.start()
-                    glowAnimation.start()
-                    letterAnimation.start()
-                }
-            }
-
-            // Professional breathing effect - scale animation
-            SequentialAnimation {
-                id: glowPulse
-                loops: Animation.Infinite
-                NumberAnimation {
-                    target: settings_page_header_text
-                    property: "scale"
-                    from: 1.0
-                    to: 1.03
-                    duration: 2500
-                    easing.type: Easing.InOutSine
-                }
-                NumberAnimation {
-                    target: settings_page_header_text
-                    property: "scale"
-                    from: 1.03
-                    to: 1.0
-                    duration: 2500
-                    easing.type: Easing.InOutSine
-                }
-            }
-
-            // Professional breathing effect - opacity animation
-            SequentialAnimation {
-                id: breathingOpacity
-                loops: Animation.Infinite
-                NumberAnimation {
-                    target: settings_page_header_text
-                    property: "opacity"
-                    from: 1.0
-                    to: 0.85
-                    duration: 2500
-                    easing.type: Easing.InOutSine
-                }
-                NumberAnimation {
-                    target: settings_page_header_text
-                    property: "opacity"
-                    from: 0.85
-                    to: 1.0
-                    duration: 2500
-                    easing.type: Easing.InOutSine
-                }
-            }
-
-            // Subtle letter spacing breathing
-            SequentialAnimation {
-                id: letterAnimation
-                loops: Animation.Infinite
-                NumberAnimation {
-                    target: settings_page_header_text
-                    property: "font.letterSpacing"
-                    from: 2
-                    to: 2.8
-                    duration: 2500
-                    easing.type: Easing.InOutSine
-                }
-                NumberAnimation {
-                    target: settings_page_header_text
-                    property: "font.letterSpacing"
-                    from: 2.8
-                    to: 2
-                    duration: 2500
-                    easing.type: Easing.InOutSine
-                }
             }
         }
     }
@@ -488,7 +205,6 @@ Rectangle {
                 Layout.fillHeight: true
                 color: "#1A1A1A"
                 
-                // Right border
                 Rectangle {
                     anchors.right: parent.right
                     width: 1
@@ -496,7 +212,7 @@ Rectangle {
                     color: "#2A2A2A"
                 }
 
-                // Menu slide-in animation
+                // Simple slide-in
                 x: -width
                 NumberAnimation {
                     id: menuAnimation
@@ -504,7 +220,7 @@ Rectangle {
                     property: "x"
                     from: -menuPanel.width
                     to: 0
-                    duration: 600
+                    duration: 400
                     easing.type: Easing.OutCubic
                 }
 
@@ -516,37 +232,8 @@ Rectangle {
                     spacing: 6
                     
                     delegate: Item {
-                        id: menuItem
                         width: settingsList.width
                         height: 64
-                        
-                        // Staggered entrance animation
-                        opacity: 0
-                        
-                        Component.onCompleted: {
-                            // Delay based on index for staggered effect
-                            var delay = index * 100
-                            itemEntranceTimer.interval = delay
-                            itemEntranceTimer.start()
-                        }
-
-                        Timer {
-                            id: itemEntranceTimer
-                            interval: 0
-                            onTriggered: {
-                                itemEntranceAnimation.start()
-                            }
-                        }
-
-                        NumberAnimation {
-                            id: itemEntranceAnimation
-                            target: menuItem
-                            property: "opacity"
-                            from: 0
-                            to: 1
-                            duration: 400
-                            easing.type: Easing.OutCubic
-                        }
 
                         Rectangle {
                             id: backgroundRect
@@ -556,13 +243,13 @@ Rectangle {
                             border.color: settingsList.currentIndex === index ? "#00D4AA40" : "transparent"
                             border.width: 1
 
-                            // Smooth color transitions
+                            // Smooth transitions only
                             Behavior on color {
-                                ColorAnimation { duration: 300; easing.type: Easing.OutCubic }
+                                ColorAnimation { duration: 200 }
                             }
                             
                             Behavior on border.color {
-                                ColorAnimation { duration: 300; easing.type: Easing.OutCubic }
+                                ColorAnimation { duration: 200 }
                             }
 
                             RowLayout {
@@ -571,7 +258,7 @@ Rectangle {
                                 anchors.rightMargin: 16
                                 spacing: 16
 
-                                // Enhanced professional icon
+                                // Simplified icon - no animations
                                 Rectangle {
                                     width: 36
                                     height: 36
@@ -581,23 +268,18 @@ Rectangle {
                                     border.width: 1
                                     
                                     Behavior on color {
-                                        ColorAnimation { duration: 300 }
+                                        ColorAnimation { duration: 200 }
                                     }
                                     
-                                    Behavior on border.color {
-                                        ColorAnimation { duration: 300 }
-                                    }
-                                    
-                                    // Professional SVG-style icons using Text
                                     Text {
                                         anchors.centerIn: parent
                                         text: {
                                             switch(index) {
-                                                case 0: return "●"  // Market Place - solid circle
-                                                case 1: return "◐"  // Control - half circle
-                                                case 2: return "◆"  // App Test Deployment - diamond
-                                                case 3: return "▲"  // Vehicle App - triangle
-                                                case 4: return "■"  // Vehicle Service - square
+                                                case 0: return "●"
+                                                case 1: return "◐"
+                                                case 2: return "◆"
+                                                case 3: return "▲"
+                                                case 4: return "■"
                                                 default: return "●"
                                             }
                                         }
@@ -606,47 +288,21 @@ Rectangle {
                                         color: settingsList.currentIndex === index ? "#00D4AA" : "#B0B0B0"
                                         
                                         Behavior on color {
-                                            ColorAnimation { duration: 300 }
+                                            ColorAnimation { duration: 200 }
                                         }
-                                    }
-                                    
-                                    // Modern breathing animation instead of rotation
-                                    SequentialAnimation on scale {
-                                        running: settingsList.currentIndex === index
-                                        loops: Animation.Infinite
-                                        NumberAnimation { to: 1.08; duration: 2000; easing.type: Easing.InOutSine }
-                                        NumberAnimation { to: 1.0; duration: 2000; easing.type: Easing.InOutSine }
-                                    }
-                                    
-                                    // Subtle opacity breathing when active
-                                    SequentialAnimation on opacity {
-                                        running: settingsList.currentIndex === index
-                                        loops: Animation.Infinite
-                                        NumberAnimation { to: 0.9; duration: 2000; easing.type: Easing.InOutSine }
-                                        NumberAnimation { to: 1.0; duration: 2000; easing.type: Easing.InOutSine }
                                     }
                                 }
 
-                                // Enhanced text styling
                                 Text {
-                                    id: itemText
                                     text: title
                                     font.pixelSize: 16
                                     font.family: "Segoe UI"
                                     font.weight: settingsList.currentIndex === index ? Font.DemiBold : Font.Medium
                                     color: settingsList.currentIndex === index ? "#FFFFFF" : "#C0C0C0"
-                                    verticalAlignment: Text.AlignVCenter
                                     Layout.fillWidth: true
                                     
-                                    // Letter spacing for premium feel
-                                    font.letterSpacing: settingsList.currentIndex === index ? 0.5 : 0
-                                    
                                     Behavior on color {
-                                        ColorAnimation { duration: 300 }
-                                    }
-                                    
-                                    Behavior on font.letterSpacing {
-                                        NumberAnimation { duration: 300 }
+                                        ColorAnimation { duration: 200 }
                                     }
                                 }
                             }
@@ -660,16 +316,12 @@ Rectangle {
                             onEntered: {
                                 if (settingsList.currentIndex !== index) {
                                     backgroundRect.color = "#00D4AA25"
-                                    backgroundRect.scale = 1.05
-                                    // Add bounce effect on hover
-                                    hoverBounce.start()
                                 }
                             }
                             
                             onExited: {
                                 if (settingsList.currentIndex !== index) {
                                     backgroundRect.color = "transparent"
-                                    backgroundRect.scale = 1.0
                                 }
                             }
                             
@@ -677,35 +329,8 @@ Rectangle {
                                 if (settingsList.currentIndex !== index) {
                                     settingsList.currentIndex = index
                                     stackLayout.currentIndex = index
-                                    
-                                    // Page transition animation
-                                    contentTransition.start()
                                 }
                             }
-                        }
-                        
-                        // Dramatic hover bounce animation
-                        SequentialAnimation {
-                            id: hoverBounce
-                            NumberAnimation {
-                                target: menuItem
-                                property: "scale"
-                                to: 1.1
-                                duration: 150
-                                easing.type: Easing.OutBack
-                            }
-                            NumberAnimation {
-                                target: menuItem
-                                property: "scale"
-                                to: 1.0
-                                duration: 150
-                                easing.type: Easing.InBack
-                            }
-                        }
-                        
-                        // Enhanced scale animation
-                        Behavior on scale {
-                            NumberAnimation { duration: 300; easing.type: Easing.OutElastic }
                         }
                     }
                     
@@ -718,19 +343,6 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: "#0F0F0F"
-                
-                // Content fade animation
-                opacity: 1
-                
-                NumberAnimation {
-                    id: contentTransition
-                    target: contentPanel
-                    property: "opacity"
-                    from: 0.7
-                    to: 1.0
-                    duration: 300
-                    easing.type: Easing.OutCubic
-                }
 
                 StackLayout {
                     id: stackLayout
