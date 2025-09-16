@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2025 Eclipse Foundation.
 # 
 # This program and the accompanying materials are made available under the
@@ -5,8 +6,6 @@
 # https://opensource.org/licenses/MIT.
 #
 # SPDX-License-Identifier: MIT
-
-#!/bin/bash
 
 DAEMON_JSON="/etc/docker/daemon.json"
 REGISTRY="localhost:5000"
@@ -35,7 +34,6 @@ fi
 
 
 echo "Done. Restart Docker daemon to apply changes:"
-docker kill dk_ivi
 systemctl restart docker
 echo "Restart Docker daemon done."
 

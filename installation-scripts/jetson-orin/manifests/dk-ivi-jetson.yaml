@@ -1,0 +1,278 @@
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dk-ivi-service-account
+  namespace: default
+---
+# ClusterRole with comprehensive permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dk-ivi-cluster-role
+rules:
+# Pod permissions
+- apiGroups: [""]
+  resources: ["pods", "pods/status", "pods/log"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Deployment permissions
+- apiGroups: ["apps"]
+  resources: ["deployments", "deployments/status", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Service permissions
+- apiGroups: [""]
+  resources: ["services", "endpoints", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+# Node permissions
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+# Events permissions
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch", "create"]
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dk-ivi-cluster-role-binding
+subjects:
+- kind: ServiceAccount
+  name: dk-ivi-service-account
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: dk-ivi-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Main Deployment with optimized SDV Runtime waiting
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dk-ivi
+  namespace: default
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  # Prevents multiple instances running simultaneously
+  selector:
+    matchLabels:
+      app: dk-ivi
+  template:
+    metadata:
+      labels:
+        app: dk-ivi
+      annotations:
+        restart-timestamp: "{{ .Values.timestamp | default now }}"
+        pod.kubernetes.io/sandbox-cleanup: "force"
+    spec:
+      serviceAccountName: dk-ivi-service-account
+      nodeSelector:
+        kubernetes.io/hostname: xip
+      hostNetwork: true
+      hostPID: true        # Required for nsenter to access host processes
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30  # Reduced from 60 for faster cleanup
+      
+      tolerations:
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      - key: "node.kubernetes.io/network-unavailable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      - key: "node.kubernetes.io/disk-pressure"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+      
+      # Optimized init container with faster SDV runtime detection
+      initContainers:
+      - name: wait-for-sdv-runtime
+        image: alpine:latest
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c']
+        args:
+        - |
+          set -e
+          echo "=== Fast SDV Runtime Check ==="
+          
+          # Quick kubectl access verification
+          nsenter -t 1 -m -p kubectl get deployments > /dev/null 2>&1 || {
+            echo "✗ Cannot access host kubectl"
+            exit 1
+          }
+          echo "✓ Host kubectl access ready"
+          
+          # Optimized SDV runtime check with shorter timeout
+          if nsenter -t 1 -m -p kubectl get deployment sdv-runtime > /dev/null 2>&1; then
+            echo "✓ Found SDV Runtime deployment"
+            # Reduced timeout for faster failure/success detection
+            nsenter -t 1 -m -p kubectl wait --for=condition=available --timeout=120s deployment/sdv-runtime || {
+              echo "⚠ SDV Runtime taking longer than expected, proceeding anyway"
+            }
+            echo "✓ SDV Runtime check complete"
+          else
+            echo "⚠ SDV Runtime not found, proceeding"
+          fi
+          
+          echo "=== Init completed ==="
+        
+        securityContext:
+          privileged: true     # Required for nsenter and full access
+          runAsUser: 0
+          capabilities:
+            add:
+            - SYS_ADMIN       # Required for namespace operations
+            - SYS_PTRACE      # Required for process tracing
+        
+        volumeMounts:
+        - name: offline-tools
+          mountPath: /host-bin
+          readOnly: true
+        - name: kubectl-binary
+          mountPath: /usr/local/bin/kubectl
+          readOnly: true
+        - name: kube-config
+          mountPath: /root/.kube/config
+          readOnly: true
+        
+        # Increased resources for faster init
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"  # Doubled for faster execution
+          limits:
+            memory: "128Mi"
+            cpu: "300m"  # Increased limit
+      
+      volumes:
+      - name: offline-tools
+        hostPath:
+          path: /opt/k3s-tools/bin
+          type: Directory
+      - name: dk-home
+        hostPath: 
+          path: ${HOME_DIR}/.dk
+          type: DirectoryOrCreate
+      - name: x11-unix
+        hostPath: 
+          path: /tmp/.X11-unix
+          type: Directory
+      - name: kubectl-binary
+        hostPath:
+          path: /usr/local/bin/kubectl
+          type: File
+      - name: kube-config
+        hostPath:
+          path: ${HOME_DIR}/.kube/config
+          type: File
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: docker-binary
+        hostPath:
+          path: /usr/bin/docker
+          type: File
+      
+      containers:
+      - name: dk-ivi
+        image: ${DOCKER_HUB_NAMESPACE}/dk_ivi:latest
+        imagePullPolicy: IfNotPresent
+        
+        # Optimized startup probe with faster detection
+        startupProbe:
+          exec:
+            command: ["/bin/sh", "-c", "echo 'startup check' && sleep 1"]  # Reduced sleep
+          initialDelaySeconds: 20  # Reduced from 45
+          periodSeconds: 5         # Reduced from 15
+          timeoutSeconds: 3        # Reduced from 10
+          failureThreshold: 20     # Increased to maintain coverage but check faster
+        
+        # Faster readiness probe
+        readinessProbe:
+          exec:
+            command: ["/bin/sh", "-c", "echo 'ready'"]
+          initialDelaySeconds: 25  # Reduced from 60
+          periodSeconds: 5         # Reduced from 20
+          timeoutSeconds: 3        # Reduced from 10
+          failureThreshold: 3
+        
+        # Optimized liveness probe
+        livenessProbe:
+          exec:
+            command: ["/bin/sh", "-c", "echo 'alive'"]
+          initialDelaySeconds: 35  # Reduced from 120
+          periodSeconds: 20        # Reduced from 45
+          timeoutSeconds: 5        # Reduced from 15
+          failureThreshold: 3      # Reduced from 5
+        
+        # Increased resource allocation for faster startup
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"  # Doubled for faster startup
+          limits:
+            memory: "1Gi"
+            cpu: "1500m"  # Increased for better performance
+        
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+          privileged: false
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_ADMIN
+        env:
+        - name: DISPLAY
+          value: "${DISPLAY}"
+        - name: XDG_RUNTIME_DIR
+          value: "${XDG_RUNTIME_DIR}"
+        - name: QT_QUICK_BACKEND
+          value: "software"
+        - name: DKCODE
+          value: "dreamKIT"
+        - name: DK_USER
+          value: "${DK_USER}"
+        - name: DK_VIP
+          value: "${dk_vip_demo}"
+        - name: DK_DOCKER_HUB_NAMESPACE
+          value: "${DOCKER_HUB_NAMESPACE}"
+        - name: DK_ARCH
+          value: "${ARCH}"
+        - name: DK_CONTAINER_ROOT
+          value: "/app/.dk/"
+        - name: KUBECONFIG
+          value: "/root/.kube/config"
+        volumeMounts:
+        - name: dk-home
+          mountPath: /app/.dk
+        - name: x11-unix
+          mountPath: /tmp/.X11-unix
+        - name: kubectl-binary
+          mountPath: /usr/local/bin/kubectl
+          readOnly: true
+        - name: kube-config
+          mountPath: /root/.kube/config
+          readOnly: true
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: docker-binary
+          mountPath: /usr/bin/docker
+          readOnly: true

@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2025 Eclipse Foundation.
 # 
 # This program and the accompanying materials are made available under the
@@ -5,8 +6,6 @@
 # https://opensource.org/licenses/MIT.
 #
 # SPDX-License-Identifier: MIT
-
-#!/bin/bash
 
 # Define the path for the service unit file
 SERVICE_FILE="/etc/systemd/system/dk_xiphost.service"

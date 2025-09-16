@@ -1,0 +1,11 @@
+mirrors:
+  "docker.io":
+    endpoint:
+      - "http://192.168.56.48:5000"
+  "ghcr.io":
+    endpoint:
+      - "http://192.168.56.48:5000"
+configs:
+  "192.168.56.48:5000":
+    tls:
+      insecure_skip_verify: true

@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2025 Eclipse Foundation.
 # 
 # This program and the accompanying materials are made available under the
@@ -6,7 +7,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-#!/bin/bash
 
 # Determine the user who ran the command
 if [ -n "$SUDO_USER" ]; then
@@ -27,9 +27,11 @@ echo "Env Variables:"
 echo "HOME_DIR: $HOME_DIR"
 echo "DOCKER_HUB_NAMESPACE: $DOCKER_HUB_NAMESPACE"
 
+k3s-killall.sh
+k3s-uninstall.sh
 
 echo "Stopping all running containers..."
-docker stop $(docker ps -q)
+docker kill $(docker ps -q)
 
 echo "Removing all stopped Docker containers..."
 docker rm $(docker ps -aq)
