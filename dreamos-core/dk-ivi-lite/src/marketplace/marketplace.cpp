@@ -352,8 +352,7 @@ MarketplaceViewModel::MarketplaceViewModel(QObject *parent)
   , m_jobManager(JobManager::instance())
 {
     // Load categories
-    QString cfg = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-                  + "/marketplaceselection.json";
+    QString cfg = DK_CONTAINER_ROOT + "dk_marketplace/marketplaceselection.json";
     m_cats->loadFromJsonFile(cfg);
 
     // Connect installation worker signals
