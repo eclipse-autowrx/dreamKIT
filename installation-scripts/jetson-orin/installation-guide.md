@@ -140,17 +140,33 @@ URL:  https://kit.digitalauto.tech
 get_dreamkit_code 92 serialNo:  "7de10f4b"
 ```
 
-### Debug
+### Troubleshoot
 
+Checking the docker image that need to share to ZonalECU
 ```shell
-
 curl -v http://192.168.56.48:5000/v2/_catalog
 ```
 
+Healthy status of k3s master
 ```shell
-
 sudo systemctl restart k3s
 sudo journalctl -u k3s -f
 sudo systemctl status k3s
+```
 
+Fix problem with permission denined
+```shell
+# 
+# Warinig Log with command "kubectl get all"
+# WARN[0000] Unable to read /etc/rancher/k3s/k3s.yaml, please start server with --write-kubeconfig-mode or --write-kubeconfig-group to modify kube config permissions 
+# error: error loading config file "/etc/rancher/k3s/k3s.yaml": open /etc/rancher/k3s/k3s.yaml: permission denied
+# 
+# Solution
+# 2.a) Change kubeconfig file permissions
+sudo chown $USER:$USER /etc/rancher/k3s/k3s.yaml
+# sudo chmod 644 /etc/rancher/k3s/k3s.yaml
+# 2.b) For regular user access, copy the kubeconfig file
+sudo mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown $(id -u):$(id -g) ~/.kube/config
 ```

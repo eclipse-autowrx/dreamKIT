@@ -128,7 +128,7 @@ show_banner() {
     ║    ╚═══════╝╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═╝     ╚═╝  ╚═════╝ ╚══════╝║
     ║                                                                      ║
     ║                    Professional Installation Suite                   ║
-    ║                          Version 2.1 - Enhanced                     ║
+    ║                    --> Version 2.0 - K3s Deployment                  ║
     ╚══════════════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${NC}"
@@ -683,9 +683,6 @@ perform_software_updates() {
             show_step $step_num "IVI Interface" "Configuring In-Vehicle Infotainment system"
         fi
 
-        # Switch to IVI namespace
-        DOCKER_HUB_NAMESPACE="ghcr.io/samtranbosch"
-
         # Pull latest image first
         apply_manifest dk-ivi-pull.yaml
         run_with_feedback \
@@ -851,7 +848,7 @@ main() {
     # Step 8   K3s-based installation
     ###############################################################################
     show_step 8 "K3s-based installation" "k3s master installation & preparation for local registry"
-    sudo scripts/k3s-master-prepare.sh br0
+    sudo scripts/k3s-master-prepare.sh eth0
     if [ $? -ne 0 ]; then
         show_error "Failed to prepare K3s master. Please check the logs."
         exit 1
