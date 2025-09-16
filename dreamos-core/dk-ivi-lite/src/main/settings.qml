@@ -1,3 +1,10 @@
+// Copyright (c) 2025 Eclipse Foundation.
+// 
+// This program and the accompanying materials are made available under the
+// terms of the MIT License which is available at
+// https://opensource.org/licenses/MIT.
+// 
+// SPDX-License-Identifier: MIT
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -151,7 +158,7 @@ Rectangle {
 
         Text {
             id: settings_page_header_text
-            text: "dreamKIT v1.11"
+            text: "dreamKIT v2.0"
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             font.bold: true

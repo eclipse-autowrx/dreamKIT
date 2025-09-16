@@ -1,3 +1,10 @@
+# Copyright (c) 2025 Eclipse Foundation.
+# 
+# This program and the accompanying materials are made available under the
+# terms of the MIT License which is available at
+# https://opensource.org/licenses/MIT.
+#
+# SPDX-License-Identifier: MIT
 cmake_minimum_required(VERSION 3.16)
 
 project(untitled2 VERSION 0.1 LANGUAGES CXX)
