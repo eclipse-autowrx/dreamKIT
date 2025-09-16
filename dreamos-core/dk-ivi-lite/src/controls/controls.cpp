@@ -23,7 +23,6 @@ QString DK_VSS_VER = "VSS_4.0";
 namespace VehicleAPI {
   std::string V_Bo_Lights_Beam_Low_IsOn               = "Vehicle.Body.Lights.Beam.Low.IsOn";
   std::string V_Bo_Lights_Beam_High_IsOn              = "Vehicle.Body.Lights.Beam.High.IsOn";
-  std::string V_Bo_Lights_Brake_IsOn                  = "Vehicle.Body.Lights.Brake.IsActive";
   std::string V_Bo_Lights_Hazard_IsSignaling          = "Vehicle.Body.Lights.Hazard.IsSignaling";
   std::string V_Ca_HVAC_Station_R1_Driver_FanSpeed    = "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed";
   std::string V_Ca_HVAC_Station_R1_Passenger_FanSpeed = "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed";
@@ -51,7 +50,6 @@ ControlsAsync::ControlsAsync()
     std::vector<std::string> signalPaths = {
         VehicleAPI::V_Bo_Lights_Beam_Low_IsOn,
         VehicleAPI::V_Bo_Lights_Beam_High_IsOn,
-        VehicleAPI::V_Bo_Lights_Brake_IsOn,
         VehicleAPI::V_Bo_Lights_Hazard_IsSignaling,
         VehicleAPI::V_Ca_Seat_R1_DriverSide_Position,
         VehicleAPI::V_Ca_HVAC_Station_R1_Driver_FanSpeed,
@@ -136,13 +134,6 @@ void ControlsAsync::init()
 
     if (VAPI_CLIENT.getTargetValueAs<bool>(
           DK_VAPI_DATABROKER,
-          VehicleAPI::V_Bo_Lights_Brake_IsOn,
-          b)) {
-      updateWidget_lightCtr_brake(b);
-    }
-
-    if (VAPI_CLIENT.getTargetValueAs<bool>(
-          DK_VAPI_DATABROKER,
           VehicleAPI::V_Bo_Lights_Hazard_IsSignaling,
           b)) {
       updateWidget_lightCtr_Hazard(b);
@@ -159,14 +150,16 @@ void ControlsAsync::init()
           DK_VAPI_DATABROKER,
           VehicleAPI::V_Ca_HVAC_Station_R1_Driver_FanSpeed,
           i_val)) {
-      updateWidget_hvac_driverSide_FanSpeed(i_val);
+      int speed = (i_val)/10;
+      updateWidget_hvac_driverSide_FanSpeed(speed);
     }
 
     if (VAPI_CLIENT.getTargetValueAs<int>(
           DK_VAPI_DATABROKER,
           VehicleAPI::V_Ca_HVAC_Station_R1_Passenger_FanSpeed,
           i_val)) {
-      updateWidget_hvac_passengerSide_FanSpeed(i_val);
+      int speed = (i_val)/10;
+      updateWidget_hvac_passengerSide_FanSpeed(speed);
     }
 }
 
@@ -189,10 +182,6 @@ void ControlsAsync::vssSubsribeCallback(const std::string &path,
       bool b = (value == "true");
       updateWidget_lightCtr_highBeam(b);
     }
-    else if (path == VehicleAPI::V_Bo_Lights_Brake_IsOn) {
-      bool b = (value == "true");
-      updateWidget_lightCtr_brake(b);
-    }
     else if (path == VehicleAPI::V_Bo_Lights_Hazard_IsSignaling) {
       bool b = (value == "true");
       updateWidget_lightCtr_Hazard(b);
@@ -206,15 +195,15 @@ void ControlsAsync::vssSubsribeCallback(const std::string &path,
     }
     else if (path == VehicleAPI::V_Ca_HVAC_Station_R1_Driver_FanSpeed) {
       try {
-        int f = std::stoi(value);
-        updateWidget_hvac_driverSide_FanSpeed(f);
+        int speed = std::stoi(value)/10;
+        updateWidget_hvac_driverSide_FanSpeed(speed);
       }
       catch (...) { }
     }
     else if (path == VehicleAPI::V_Ca_HVAC_Station_R1_Passenger_FanSpeed) {
       try {
-        int f = std::stoi(value);
-        updateWidget_hvac_passengerSide_FanSpeed(f);
+        int speed = std::stoi(value)/10;
+        updateWidget_hvac_passengerSide_FanSpeed(speed);
       }
       catch (...) { }
     }
@@ -261,25 +250,6 @@ void ControlsAsync::qml_setApi_lightCtr_HighBeam(bool sts)
           VehicleAPI::V_Bo_Lights_Beam_High_IsOn,
           newSts)) {
       qDebug() << "Verified HighBeam =" << newSts;
-    }
-}
-
-void ControlsAsync::qml_setApi_lightCtr_Brake(bool sts)
-{
-    qDebug() << "QML → set Light Brake =" << sts;
-    VAPI_CLIENT.setCurrentValue<bool>(
-      DK_VAPI_DATABROKER,
-      VehicleAPI::V_Bo_Lights_Brake_IsOn, sts);
-    VAPI_CLIENT.setTargetValue<bool>(
-      DK_VAPI_DATABROKER,
-      VehicleAPI::V_Bo_Lights_Brake_IsOn, sts);
-
-    bool newSts = false;
-    if (VAPI_CLIENT.getTargetValueAs<bool>(
-          DK_VAPI_DATABROKER,
-          VehicleAPI::V_Bo_Lights_Brake_IsOn,
-          newSts)) {
-      qDebug() << "Verified Light Brake =" << newSts;
     }
 }
 
@@ -333,16 +303,16 @@ void ControlsAsync::qml_setApi_seat_driverSide_position(int position)
 
 void ControlsAsync::qml_setApi_hvac_driverSide_FanSpeed(uint8_t speed)
 {
-  uint8_t scaled = speed;
-    qDebug() << "QML → set DriverFanSpeed =" << speed << "(scaled" << scaled << ")";
+  uint8_t scaledSpeed = speed * 10;
+    qDebug() << "QML → set DriverFanSpeed =" << speed << "(scaled" << scaledSpeed << ")";
     VAPI_CLIENT.setCurrentValue<uint8_t>(
       DK_VAPI_DATABROKER,
       VehicleAPI::V_Ca_HVAC_Station_R1_Driver_FanSpeed,
-      scaled);
+      scaledSpeed);
     VAPI_CLIENT.setTargetValue<uint8_t>(
       DK_VAPI_DATABROKER,
       VehicleAPI::V_Ca_HVAC_Station_R1_Driver_FanSpeed,
-      scaled);
+      scaledSpeed);
 
     int newSpeed = 0;
     if (VAPI_CLIENT.getTargetValueAs<int>(
@@ -355,16 +325,16 @@ void ControlsAsync::qml_setApi_hvac_driverSide_FanSpeed(uint8_t speed)
 
 void ControlsAsync::qml_setApi_hvac_passengerSide_FanSpeed(uint8_t speed)
 {
-  uint8_t scaled = speed;
-    qDebug() << "QML → set PassengerFanSpeed =" << speed << "(scaled" << scaled << ")";
+  uint8_t scaledSpeed = speed * 10;
+    qDebug() << "QML → set PassengerFanSpeed =" << speed << "(scaled" << scaledSpeed << ")";
     VAPI_CLIENT.setCurrentValue<uint8_t>(
       DK_VAPI_DATABROKER,
       VehicleAPI::V_Ca_HVAC_Station_R1_Passenger_FanSpeed,
-      scaled);
+      scaledSpeed);
     VAPI_CLIENT.setTargetValue<uint8_t>(
       DK_VAPI_DATABROKER,
       VehicleAPI::V_Ca_HVAC_Station_R1_Passenger_FanSpeed,
-      scaled);
+      scaledSpeed);
 
     int newSpeed = 0;
     if (VAPI_CLIENT.getTargetValueAs<int>(
