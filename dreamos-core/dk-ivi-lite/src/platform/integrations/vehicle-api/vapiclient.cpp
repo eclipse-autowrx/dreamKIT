@@ -63,6 +63,17 @@ VAPIClient::findClient(const std::string &serverURI) {
   return it->second.client.get();
 }
 
+KuksaClient::KuksaClient*
+VAPIClient::findClient(const std::string &serverURI) const {
+  std::lock_guard lock(mClientsMtx_);
+  auto it = mClients_.find(serverURI);
+  if (it == mClients_.end()) {
+    std::cerr << "[VAPIClient] No client for server " << serverURI << "\n";
+    return nullptr;
+  }
+  return it->second.client.get();
+}
+
 bool VAPIClient::getCurrentValue(const std::string &serverURI,
                                  const std::string &path,
                                  std::string       &outValue) {
@@ -87,16 +98,14 @@ bool VAPIClient::subscribeCurrent(const std::string               &serverURI,
   auto *c = findClient(serverURI);
   if (!c) return false;
 
-  // fire off one thread per path
+  // Use the new reconnection-aware subscription method
   {
     std::lock_guard lock(mClientsMtx_);
     auto &entry = mClients_.at(serverURI);
     for (auto &p : paths) {
-      entry.subThreads.emplace_back(
-        [c, p, callback]() {
-          c->subscribeCurrentValue(p, callback);
-        }
-      );
+      entry.subThreads.emplace_back([c, p, callback]() {
+        c->subscribeWithReconnect(p, callback, KuksaClient::FT_VALUE);
+      });
     }
   }
   return true;
@@ -108,18 +117,41 @@ bool VAPIClient::subscribeTarget(const std::string               &serverURI,
   auto *c = findClient(serverURI);
   if (!c) return false;
 
+  // Use the new reconnection-aware subscription method
   {
     std::lock_guard lock(mClientsMtx_);
     auto &entry = mClients_.at(serverURI);
     for (auto &p : paths) {
-      entry.subThreads.emplace_back(
-        [c, p, callback]() {
-          c->subscribeTargetValue(p, callback);
-        }
-      );
+      entry.subThreads.emplace_back([c, p, callback]() {
+        c->subscribeWithReconnect(p, callback, KuksaClient::FT_ACTUATOR_TARGET);
+      });
     }
   }
   return true;
+}
+
+bool VAPIClient::isConnected(const std::string &serverURI) const {
+  auto *c = findClient(serverURI);
+  return c ? c->isConnected() : false;
+}
+
+void VAPIClient::setAutoReconnect(const std::string &serverURI, bool enabled) {
+  auto *c = findClient(serverURI);
+  if (c) {
+    c->setAutoReconnect(enabled);
+    std::cout << "[VAPIClient] Auto-reconnect "
+              << (enabled ? "enabled" : "disabled")
+              << " for " << serverURI << std::endl;
+  }
+}
+
+bool VAPIClient::forceReconnect(const std::string &serverURI) {
+  auto *c = findClient(serverURI);
+  if (c) {
+    std::cout << "[VAPIClient] Forcing reconnection to " << serverURI << std::endl;
+    return c->reconnect();
+  }
+  return false;
 }
 
 void VAPIClient::shutdown() {

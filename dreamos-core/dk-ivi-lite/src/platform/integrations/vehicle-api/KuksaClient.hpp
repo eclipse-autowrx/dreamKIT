@@ -19,6 +19,11 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <set>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
 
 
 namespace KuksaClient {
@@ -68,6 +73,15 @@ public:
 
   // Establish connection to the broker server.
   void connect();
+
+  // Check if client is currently connected
+  bool isConnected() const;
+
+  // Enable/disable automatic reconnection (default: enabled)
+  void setAutoReconnect(bool enabled);
+
+  // Force a reconnection attempt
+  bool reconnect();
 
   // Get the current value for an entry as a string.
   std::string getCurrentValue(const std::string &entryPath);
@@ -120,6 +134,11 @@ public:
   // The provided callback is invoked with (entryPath, updateValue) for every update.
   void subscribe(const std::string &entryPath,
                   std::function<void(const std::string &, const std::string &, const int &)> userCallback, int field);
+
+  // Enhanced subscribe with automatic reconnection
+  void subscribeWithReconnect(const std::string &entryPath,
+                             std::function<void(const std::string &, const std::string &, const int &)> userCallback,
+                             int field);
 
   // Subscribe to all signal paths (from our configuration).
   // Each subscription runs in its own thread.
@@ -174,6 +193,13 @@ private:
   static bool convertString(const std::string &str, uint32_t &out);
 
   //--------------------------------------------------------------------------
+  // Private Helper Methods for Reconnection
+  //--------------------------------------------------------------------------
+  bool attemptReconnection();
+  void handleConnectionFailure();
+  void restartSubscriptions();
+
+  //--------------------------------------------------------------------------
   // Private Members
   //--------------------------------------------------------------------------
   // All gRPC/Proto-related members are hidden in the implementation.
@@ -188,6 +214,29 @@ private:
 
   // Threads dedicated to subscription updates.
   std::vector<std::thread> subscriptionThreads_;
+
+  // Track active subscription paths to prevent duplicates
+  std::set<std::string> activeSubscriptionPaths_;
+  std::mutex subscriptionPathsMutex_;
+
+  // Connection state management
+  mutable std::atomic<bool> connected_{false};
+  std::atomic<bool> autoReconnect_{true};
+  std::atomic<bool> shouldStop_{false};
+
+  // Reconnection mechanism
+  std::mutex reconnectMutex_;
+  std::condition_variable reconnectCV_;
+  std::thread reconnectThread_;
+
+  // Active subscription tracking for restart after reconnection
+  struct SubscriptionInfo {
+    std::string entryPath;
+    std::function<void(const std::string &, const std::string &, const int &)> callback;
+    int field;
+  };
+  std::vector<SubscriptionInfo> activeSubscriptions_;
+  std::mutex subscriptionsMutex_;
 };
 
 } // namespace KuksaClient

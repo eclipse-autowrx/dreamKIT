@@ -107,6 +107,11 @@ public:
   // Blocks/destroys all subscription threads and clients.
   void shutdown();
 
+  // Connection status and control
+  bool isConnected(const std::string &serverURI) const;
+  void setAutoReconnect(const std::string &serverURI, bool enabled);
+  bool forceReconnect(const std::string &serverURI);
+
 private:
   VAPIClient();
   ~VAPIClient();
@@ -116,6 +121,7 @@ private:
 
   // internal helper
   KuksaClient::KuksaClient* findClient(const std::string &serverURI);
+  KuksaClient::KuksaClient* findClient(const std::string &serverURI) const;
 
   // one entry per connected server
   struct ClientEntry {
