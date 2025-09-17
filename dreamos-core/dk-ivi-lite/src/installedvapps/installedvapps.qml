@@ -1,3 +1,10 @@
+// Copyright (c) 2025 Eclipse Foundation.
+// 
+// This program and the accompanying materials are made available under the
+// terms of the MIT License which is available at
+// https://opensource.org/licenses/MIT.
+// 
+// SPDX-License-Identifier: MIT
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -21,7 +28,7 @@ Rectangle {
 
     Component.onCompleted: {
         appListModel.clear()
-        appAsync.initInstalledVappsFromDB()
+        appAsync.initInstalledFromDB()
     }
 
     function findChildByObjectName(parent, objectName) {
@@ -81,10 +88,12 @@ Rectangle {
         }
 
         onUpdateServicesRunningSts: (appId, isStarted, idx) => {
-            var chkItem = appListView.itemAtIndex(idx);
-            var foundChild = findChildByObjectName(chkItem, appId);
-            if (foundChild) {
-                foundChild.checked = isStarted;
+            if (appId !== "") {
+                var chkItem = appListView.itemAtIndex(idx);
+                var foundChild = findChildByObjectName(chkItem, appId);
+                if (foundChild) {
+                    foundChild.checked = isStarted;
+                }
             }
         }
     }

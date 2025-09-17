@@ -1,3 +1,10 @@
+// Copyright (c) 2025 Eclipse Foundation.
+// 
+// This program and the accompanying materials are made available under the
+// terms of the MIT License which is available at
+// https://opensource.org/licenses/MIT.
+// 
+// SPDX-License-Identifier: MIT
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -800,10 +807,10 @@ Rectangle {
                                     }
                                 }
 
-                                // Level 2 Button
+                                // Level 5 Button
                                 Rectangle {
-                                    id: seatLevel2
-                                    property bool checked: seatLevels.currentLevel === 2
+                                    id: seatLevel5
+                                    property bool checked: seatLevels.currentLevel === 5
                                     width: 60
                                     height: 60
                                     radius: 10
@@ -813,8 +820,8 @@ Rectangle {
                                     
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "2"
-                                        color: seatLevel2.checked ? "#000000" : "#FFFFFF"
+                                        text: "5"
+                                        color: seatLevel5.checked ? "#000000" : "#FFFFFF"
                                         font.pixelSize: 20
                                         font.bold: true
                                     }
@@ -822,16 +829,16 @@ Rectangle {
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            seatLevels.currentLevel = 2
-                                            controlPageAsync.qml_setApi_seat_driverSide_position(2)
+                                            seatLevels.currentLevel = 5
+                                            controlPageAsync.qml_setApi_seat_driverSide_position(5)
                                         }
                                     }
                                 }
 
-                                // Level 3 Button
+                                // Level 10 Button
                                 Rectangle {
-                                    id: seatLevel3
-                                    property bool checked: seatLevels.currentLevel === 3
+                                    id: seatLevel10
+                                    property bool checked: seatLevels.currentLevel === 10
                                     width: 60
                                     height: 60
                                     radius: 10
@@ -841,8 +848,8 @@ Rectangle {
                                     
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "3"
-                                        color: seatLevel3.checked ? "#000000" : "#FFFFFF"
+                                        text: "10"
+                                        color: seatLevel10.checked ? "#000000" : "#FFFFFF"
                                         font.pixelSize: 20
                                         font.bold: true
                                     }
@@ -850,8 +857,8 @@ Rectangle {
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            seatLevels.currentLevel = 3
-                                            controlPageAsync.qml_setApi_seat_driverSide_position(3)
+                                            seatLevels.currentLevel = 10
+                                            controlPageAsync.qml_setApi_seat_driverSide_position(10)
                                         }
                                     }
                                 }

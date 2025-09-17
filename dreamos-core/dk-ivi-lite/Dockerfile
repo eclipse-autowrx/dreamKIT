@@ -1,3 +1,10 @@
+# Copyright (c) 2025 Eclipse Foundation.
+# 
+# This program and the accompanying materials are made available under the
+# terms of the MIT License which is available at
+# https://opensource.org/licenses/MIT.
+#
+# SPDX-License-Identifier: MIT
 # ========================
 # Builder stage
 # ========================
@@ -8,7 +15,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     git cmake build-essential libssl-dev libboost-all-dev curl \
     qt6-base-dev qt6-base-private-dev qt6-declarative-dev qt6-declarative-private-dev \
-    libqt6quick6 qml6-module-qtquick qml6-module-qtquick-controls \
+    libqt6concurrent6 libqt6quick6 qml6-module-qtquick qml6-module-qtquick-controls \
     qml6-module-qtquick-layouts qml6-module-qtquick-window \
     qml6-module-qtqml-workerscript qml6-module-qtquick-templates \
     python3.12 python3.12-dev libpython3.12 pax-utils
@@ -33,7 +40,7 @@ RUN apt-get update && apt-get install -y \
     libglx-mesa0 libgl1 libopengl0 \
     fontconfig libpng16-16 \
     libqt6core6 libqt6gui6 libqt6widgets6 \
-    libqt6qml6 libqt6quick6 \
+    libqt6concurrent6 libqt6qml6 libqt6quick6 \
     qml6-module-qtquick qml6-module-qtquick-controls \
     qml6-module-qtquick-layouts qml6-module-qtquick-window \
     qml6-module-qtqml-workerscript qml6-module-qtquick-templates \
@@ -64,4 +71,4 @@ RUN chmod +x /app/start.sh
 ENV LD_LIBRARY_PATH=/app/exec/library
 ENV QML_IMPORT_PATH=/usr/lib/x86_64-linux-gnu/qt6/qml
 
-CMD ["/app/start.sh"]
+CMD ["/app/exec/dk_ivi"]

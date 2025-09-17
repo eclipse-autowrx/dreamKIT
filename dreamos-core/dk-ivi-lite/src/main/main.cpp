@@ -1,3 +1,10 @@
+// Copyright (c) 2025 Eclipse Foundation.
+// 
+// This program and the accompanying materials are made available under the
+// terms of the MIT License which is available at
+// https://opensource.org/licenses/MIT.
+// 
+// SPDX-License-Identifier: MIT
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -7,7 +14,36 @@
 #include "../installedservices/installedservices.hpp"
 #include "../installedvapps/installedvapps.hpp"
 #include "../controls/controls.hpp"
-#include "../library/vapiclient/vapiclient.hpp"
+#include "../platform/integrations/vehicle-api/vapiclient.hpp"
+#include "../platform/notifications/notificationmanager.hpp"
+
+#include <QCoreApplication>
+#include <QDateTime>
+#include <QDebug>
+
+static void myMessageHandler(QtMsgType type,
+                             const QMessageLogContext &ctx,
+                             const QString &msg)
+{
+    QByteArray localMsg = msg.toLocal8Bit();
+    QString time = QDateTime::currentDateTime()
+                       .toString("yyyy-MM-dd hh:mm:ss.zzz");
+
+    const char* typeStr = "";
+    switch (type) {
+    case QtDebugMsg:    typeStr = "DEBUG";    break;
+    case QtWarningMsg:  typeStr = "WARNING";  break;
+    case QtCriticalMsg: typeStr = "CRITICAL"; break;
+    case QtFatalMsg:    typeStr = "FATAL";    break;
+    default:                                break;
+    }
+
+    fprintf(stderr, "[%s] [%s] %s\n",
+            qPrintable(time), typeStr, localMsg.constData());
+
+    if (type == QtFatalMsg)
+        abort();
+}
 
 int main(int argc, char *argv[])
 {
@@ -15,16 +51,34 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    // VAPI Client Initilization
+    qInstallMessageHandler(myMessageHandler);
+
+    // VAPI Client Initialization
     VAPI_CLIENT.connectToServer(DK_VAPI_DATABROKER);
+    
+    // Register the notification manager BEFORE creating the engine
+    qmlRegisterSingletonType<NotificationManager>("NotificationManager", 1, 0, "NotificationManager",
+        [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
+            Q_UNUSED(engine)
+            Q_UNUSED(scriptEngine)
+            return &NotificationManager::instance();
+        });
+
     // Pages
     qmlRegisterType<DigitalAutoAppAsync>("DigitalAutoAppAsync", 1, 0, "DigitalAutoAppAsync");
-    qmlRegisterType<MarketplaceAsync>("MarketplaceAsync", 1, 0, "MarketplaceAsync");
-    qmlRegisterType<ServicesAsync>("ServicesAsync", 1, 0, "ServicesAsync");
+    qmlRegisterType<CategoryListModel>("MyApp",1,0,"CategoryListModel");
+    qmlRegisterType<AppListModel>("MyApp",1,0,"AppListModel");
+    qmlRegisterType<MarketplaceViewModel>("MyApp",1,0,"MarketplaceViewModel");
+
+    qmlRegisterType<VsersAsync>("VsersAsync", 1, 0, "VsersAsync");
     qmlRegisterType<VappsAsync>("VappsAsync", 1, 0, "VappsAsync");
     qmlRegisterType<ControlsAsync>("ControlsAsync", 1, 0, "ControlsAsync");
 
     QQmlApplicationEngine engine;
+    
+    // Expose global notification manager instance to QML context
+    engine.rootContext()->setContextProperty("globalNotificationManager", &NotificationManager::instance());
+    
     const QUrl url1(QStringLiteral("qrc:/untitled2/main/main.qml"));
     const QUrl url2(QStringLiteral("qrc:/main/main.qml"));
 
