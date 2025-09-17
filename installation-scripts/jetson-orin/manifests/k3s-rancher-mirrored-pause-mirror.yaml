@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mirror-k3s-rancher-mirrored-pause
+spec:
+  template:
+    spec:
+      hostNetwork: true
+      # force this Pod onto ECU-A (your Internet-capable node)
+      nodeSelector:
+        kubernetes.io/hostname: xip  
+      restartPolicy: Never
+      containers:
+      - name: mirror-k3s-rancher-mirrored-pause
+        # use a container with skopeo or crane installed
+        image: quay.io/containers/skopeo:latest
+        command: ["skopeo","copy"]
+        args:
+          - "--retry-times=3"
+          - "--all"
+          - "--dest-tls-verify=false"
+          - "docker://docker.io/rancher/mirrored-pause:3.6"
+          - "docker://localhost:5000/rancher/mirrored-pause:3.6"

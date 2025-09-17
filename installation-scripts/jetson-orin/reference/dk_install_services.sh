@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2025 Eclipse Foundation.
 # 
 # This program and the accompanying materials are made available under the
@@ -6,7 +7,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-#!/bin/bash
 
 # Determine the user who ran the command
 if [ -n "$SUDO_USER" ]; then

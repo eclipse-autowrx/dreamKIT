@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dk-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dk-manager
+  template:
+    metadata:
+      labels:
+        app: dk-manager
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: xip
+      hostNetwork: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: dk-home
+        hostPath: { path: ${HOME_DIR}/.dk }
+      - name: docker-sock
+        hostPath: { path: /var/run/docker.sock }
+      containers:
+      - name: dk-manager
+        image: ${DOCKER_HUB_NAMESPACE}/dk_manager:latest
+        imagePullPolicy: IfNotPresent  # Never try to pull
+        env:
+        - { name: USER, value: "${DK_USER}" }
+        - { name: DOCKER_HUB_NAMESPACE, value: "${DOCKER_HUB_NAMESPACE}" }
+        - { name: ARCH, value: "${ARCH}" }
+        volumeMounts:
+        - { name: dk-home,    mountPath: /app/.dk }
+        - { name: docker-sock, mountPath: /var/run/docker.sock }

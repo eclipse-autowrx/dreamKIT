@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dk-ivi-pull
+spec:
+  # Add backoff limit to prevent infinite retries
+  backoffLimit: 3
+  # Set active deadline to prevent hanging jobs
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/hostname: xip
+      restartPolicy: Never
+      containers:
+      - name: dk-ivi-pull
+        image: ${DOCKER_HUB_NAMESPACE}/dk_ivi:latest
+        imagePullPolicy: Always
+        command: ["true"]
+        # Add resource limits to prevent resource issues
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
