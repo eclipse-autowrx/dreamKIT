@@ -1,0 +1,75 @@
+# This is a VSS example overlay that is to be used when generating vss_dbc.json in this repository
+# The content shall just be seen as examples that can be used for prototyping.
+# It does not in any way represent an official mapping.
+#
+# How to regenerate vss_dbc.json:
+#
+# 1. Decide which VSS version to use
+#
+# Two good places to check:
+# * See what versions KUKSA.val supports: https://github.com/eclipse/kuksa.val/tree/master/data/vss-core
+# * See what VSS releases that exists: https://github.com/COVESA/vehicle_signal_specification/releases
+#
+# (You can also also clone the VSS-repo and use whatever version you like)
+#
+# 2. Download Yaml file for selected verison.
+#
+# As of today part of a *.tar.gz file in https://github.com/COVESA/vehicle_signal_specification/releases
+#
+# 3. Regenerate the json file
+#
+# vss-tools/vspec2json.py -e dbc -o dbc_overlay.vspec --json-pretty --no-uuid vss_rel_3.1.1.yaml vss_dbc.json
+#
+# (For this you must typically have cloned https://github.com/COVESA/vss-tools)
+
+#
+#
+# Type and datatype required, others will be inherited
+
+Vehicle.Body.Lights.Beam.Low.IsOn:
+  type: actuator
+  datatype: boolean
+  vss2dbc:
+    signal: DAS_lowBeamRequest
+    transform:
+       mapping:
+        - from: true
+          to: DAS_HEADLIGHT_REQUEST_ON
+        - from: false
+          to: DAS_HEADLIGHT_REQUEST_OFF
+
+Vehicle.Body.Lights.Hazard.IsSignaling:
+  type: actuator
+  datatype: boolean
+  vss2dbc:
+    signal: DAS_hazardLightRequest
+    transform:
+       mapping:
+        - from: true
+          to: DAS_REQUEST_HAZARDS_ON
+        - from: false
+          to: DAS_REQUEST_HAZARDS_OFF
+
+Vehicle.Body.Lights.Beam.High.IsOn:
+  type: actuator
+  datatype: boolean
+  vss2dbc:
+    signal: DAS_highBeamRequest
+
+Vehicle.Cabin.Seat.Row1.DriverSide.Position:
+  datatype: int8
+  type: actuator
+  vss2dbc:
+    signal: VCRIGHT_frontSeatTrackForward
+
+Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed:
+  datatype: int8
+  type: actuator
+  vss2dbc:
+    signal: VCRIGHT_hvacBlowerSpeedRPMReq
+
+Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed:
+  datatype: int8
+  type: actuator
+  vss2dbc:
+    signal: VCLEFT_hvacBlowerRPMTarget

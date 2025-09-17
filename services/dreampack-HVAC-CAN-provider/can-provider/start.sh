@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (c) 2025 Eclipse Foundation.
 # 
 # This program and the accompanying materials are made available under the
@@ -6,7 +7,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-#!/bin/sh
 
 echo "Start dk service can provider"
 
@@ -16,7 +16,7 @@ sleep 0.1
 # cd /app/
 # python main.py
 # cd /dist/
-./dbcfeeder --val2dbc --dbc2val --use-socketcan --mapping mapping/vss_4.0/vss_dbc.json
+./dbcfeeder --val2dbc --dbc2val --use-socketcan
 
 echo "End dk service can provider"
 

@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dk-service-can-provider
+  namespace: default
+  labels:
+    app: dk-service-can-provider
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: dk-service-can-provider
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dk-service-can-provider-config
+  namespace: default
+  labels:
+    app: dk-service-can-provider
+data:
+  # Configuration for the CAN service
+  can_interface: "can1"
+  kuksa_address: "192.168.56.48"
+  kuksa_port: "55555"
+  mapping_file: "mapping/vss_4.0/vss_dbc.json"
+  log_level: "INFO"
+  
+  # DBC Configuration
+  dbc_file: "ModelCAN.dbc"
+  dbc2val_enabled: "true"
+  val2dbc_enabled: "true"
+  
+  # CAN Bus Configuration
+  can_fd_enabled: "false"
+  can_bus_timeout: "1.0"
+  
+  # VSS Configuration
+  vss_version: "4.0"
+  vss_signals: |
+    # VSS 4.x signals
+    Vehicle.Body.Lights.Beam.Low.IsOn
+    Vehicle.Body.Lights.Beam.High.IsOn
+    Vehicle.Body.Lights.Hazard.IsSignaling
+    Vehicle.Cabin.Seat.Row1.DriverSide.Position
+    Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed
+    Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dk-service-can-provider-secrets
+  namespace: default
+  labels:
+    app: dk-service-can-provider
+type: Opaque
+data:
+  # Base64 encoded secrets (if needed for future authentication)
+  # kuksa_token: ""
+  # ca_cert: ""

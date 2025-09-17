@@ -36,6 +36,70 @@ BS_:
 BU_: Receiver ChassisBus VehicleBus PartyBus
 
 
+BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
+ SG_ VCRIGHT_2RowSeatReclineSwitch : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowAutoDownRF : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowAutoDownRR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowAutoUpRF : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowAutoUpRR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowDownRF : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowDownRR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackAutoDwnLF : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackAutoDwnLR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackAutoDwnRR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackAutoUpLF : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackAutoUpLR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackAutoUpRR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackDownLF : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackDownLR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackDownRR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackUpLF : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackUpLR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowSwPackUpRR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowUpRF : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_btnWindowUpRR : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_frontBuckleSwitch : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontOccupancySwitch : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatBackrestBack : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatBackrestForward : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatLiftDown : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatLiftUp : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatLumbarDown : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatLumbarIn : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatLumbarOut : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatLumbarUp : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatTiltDown : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatTiltUp : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_frontSeatTrackBack : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_liftgateShutfaceSwitchPr : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCRIGHT_rearCenterBuckleSwitch : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_rearRightBuckleSwitch : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCRIGHT_trunkExtReleasePressed : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_blowerIndex : 0|2@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerCBCCtrlState : 0|3@1+ (1,0) [0|4] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerCBCEstState : 0|4@1+ (1,0) [0|14] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerEnabled : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerFETTemp : 0|7@1+ (1.5,-40) [-40|149] "C" Vector__XXX
+ SG_ VCLEFT_hvacBlowerFault : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerIPhase0 : 0|8@1+ (0.2,0) [0|50] "A" Vector__XXX
+ SG_ VCLEFT_hvacBlowerIPhase1 : 0|8@1+ (0.2,0) [0|50] "A" Vector__XXX
+ SG_ VCLEFT_hvacBlowerIPhase2 : 0|8@1+ (0.2,0) [0|50] "A" Vector__XXX
+ SG_ VCLEFT_hvacBlowerITerm : 0|7@1+ (0.05,-1.5) [-1.5|4.5] "Nm" Vector__XXX
+ SG_ VCLEFT_hvacBlowerInitd : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerLimitFETTemps : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerOutputDuty : 0|7@1+ (1,0) [0|100] "%" Vector__XXX
+ SG_ VCLEFT_hvacBlowerPowerOn : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerRPMActual : 0|10@1+ (10,0) [0|10000] "rpm" Vector__XXX
+ SG_ VCLEFT_hvacBlowerRs : 0|8@1+ (0.25,0) [0|60] "mOhm" Vector__XXX
+ SG_ VCLEFT_hvacBlowerRsOnlineActive : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerSpiError : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlowerTorque : 0|10@1+ (0.006,-1.5) [-1.5|4.5] "Nm" Vector__XXX
+ SG_ VCLEFT_hvacBlower_IO_CBC_HEAD : 0|4@1+ (1,0) [0|15] "" Vector__XXX
+ SG_ VCLEFT_hvacBlower_IO_CBC_Status : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlower_IO_CBC_TAIL : 0|4@1+ (1,0) [0|15] "" Vector__XXX
+ SG_ VCLEFT_hvacBlower_IO_CBC_TAIL_va : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ VCLEFT_hvacBlower_IO_CBC_numUart : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+
 BO_ 12 ID00CUI_status: 8 VehicleBus
  SG_ UI_audioActive : 1|1@1+ (1,0) [0|1] ""  Receiver
  SG_ UI_autopilotTrial : 12|2@1+ (1,0) [0|3] ""  Receiver
@@ -987,31 +1051,7 @@ BO_ 615 ID267DI_vehicleEstimates: 8 VehicleBus
  SG_ DI_vehicleEstimatesCounter : 13|3@1+ (1,0) [0|7] ""  Receiver
 
 BO_ 642 ID282VCLEFT_hvacBlowerFeedback: 8 VehicleBus
- SG_ VCLEFT_blowerIndex M : 0|2@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlowerCBCCtrlState m1 : 58|3@1+ (1,0) [0|4] ""  Receiver
- SG_ VCLEFT_hvacBlowerCBCEstState m1 : 54|4@1+ (1,0) [0|14] ""  Receiver
- SG_ VCLEFT_hvacBlowerEnabled m0 : 2|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlowerFETTemp m0 : 44|7@1+ (1.5,-40) [-40|149] "C"  Receiver
- SG_ VCLEFT_hvacBlowerFault m0 : 59|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlowerIPhase0 m1 : 10|8@1+ (0.2,0) [0|50] "A"  Receiver
- SG_ VCLEFT_hvacBlowerIPhase1 m1 : 18|8@1+ (0.2,0) [0|50] "A"  Receiver
- SG_ VCLEFT_hvacBlowerIPhase2 m1 : 26|8@1+ (0.2,0) [0|50] "A"  Receiver
- SG_ VCLEFT_hvacBlowerITerm m0 : 51|7@1+ (0.05,-1.5) [-1.5|4.5] "Nm"  Receiver
- SG_ VCLEFT_hvacBlowerInitd m0 : 58|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlowerLimitFETTemps m0 : 60|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlowerOutputDuty m0 : 3|7@1+ (1,0) [0|100] "%"  Receiver
- SG_ VCLEFT_hvacBlowerPowerOn m0 : 61|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlowerRPMActual m0 : 20|10@1+ (10,0) [0|10000] "rpm"  Receiver
  SG_ VCLEFT_hvacBlowerRPMTarget m0 : 10|10@1+ (10,0) [0|10000] "rpm"  Receiver
- SG_ VCLEFT_hvacBlowerRs m1 : 2|8@1+ (0.25,0) [0|60] "mOhm"  Receiver
- SG_ VCLEFT_hvacBlowerRsOnlineActive m1 : 61|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlowerSpiError m0 : 62|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlowerTorque m0 : 34|10@1+ (0.006,-1.5) [-1.5|4.5] "Nm"  Receiver
- SG_ VCLEFT_hvacBlower_IO_CBC_HEAD m1 : 34|4@1+ (1,0) [0|15] ""  Receiver
- SG_ VCLEFT_hvacBlower_IO_CBC_Status m1 : 43|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlower_IO_CBC_TAIL m1 : 38|4@1+ (1,0) [0|15] ""  Receiver
- SG_ VCLEFT_hvacBlower_IO_CBC_TAIL_va m1 : 42|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCLEFT_hvacBlower_IO_CBC_numUart m1 : 46|8@1+ (1,0) [0|255] ""  Receiver
 
 BO_ 755 ID2F3UI_hvacRequest: 5 VehicleBus
  SG_ UI_hvacReqACDisable : 22|2@1+ (1,0) [0|2] ""  Receiver
@@ -1091,46 +1131,8 @@ BO_ 947 ID3B3UI_vehicleControl2: 4 VehicleBus
  SG_ UI_userPresent : 18|1@1+ (1,0) [0|1] ""  Receiver
  SG_ UI_windowRequest : 20|3@1+ (1,0) [0|4] ""  Receiver
 
-BO_ 963 ID3C3VCRIGHT_switchStatus: 7 VehicleBus
- SG_ VCRIGHT_2RowSeatReclineSwitch : 54|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowAutoDownRF : 27|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowAutoDownRR : 31|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowAutoUpRF : 25|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowAutoUpRR : 29|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowDownRF : 26|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowDownRR : 30|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackAutoDwnLF : 35|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackAutoDwnLR : 39|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackAutoDwnRR : 52|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackAutoUpLF : 33|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackAutoUpLR : 37|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackAutoUpRR : 50|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackDownLF : 34|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackDownLR : 38|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackDownRR : 51|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackUpLF : 32|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackUpLR : 36|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowSwPackUpRR : 49|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowUpRF : 24|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_btnWindowUpRR : 28|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_frontBuckleSwitch : 40|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontOccupancySwitch : 42|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatBackrestBack : 12|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatBackrestForward : 14|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatLiftDown : 8|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatLiftUp : 10|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatLumbarDown : 16|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatLumbarIn : 20|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatLumbarOut : 22|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatLumbarUp : 18|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatTiltDown : 4|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatTiltUp : 6|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatTrackBack : 0|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_frontSeatTrackForward : 2|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_liftgateShutfaceSwitchPr : 53|1@1+ (1,0) [0|1] ""  Receiver
- SG_ VCRIGHT_rearCenterBuckleSwitch : 44|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_rearRightBuckleSwitch : 46|2@1+ (1,0) [0|3] ""  Receiver
- SG_ VCRIGHT_trunkExtReleasePressed : 48|1@1+ (1,0) [0|1] ""  Receiver
+BO_ 963 ID3C3VCRIGHT_switchStatus: 8 VehicleBus
+ SG_ VCRIGHT_frontSeatTrackForward : 2|16@1+ (1,0) [0|10] ""  Receiver
 
 BO_ 995 ID3E3VCRIGHT_lightStatus: 2 VehicleBus
  SG_ VCRIGHT_brakeLightStatus : 0|2@1+ (1,0) [0|3] ""  Receiver
@@ -3108,6 +3110,8 @@ BO_ 1025 ID401BrickVoltages: 8 VehicleBus
 
 
 
+CM_ BO_ 3221225472 "This is a message for not used signals, created by Vector CANdb++ DBC OLE DB Provider.";
+CM_ SG_ 3221225472 VCLEFT_hvacBlowerRPMActual "HVAC Blower Speed";
 CM_ SG_ 130 UI_tripPlanningActive "Navigation Active";
 CM_ SG_ 257 RCM_pitchRate "Pitch";
 CM_ SG_ 257 RCM_rollRate "Roll";
@@ -3123,7 +3127,6 @@ CM_ SG_ 985 UI_gpsVehicleSpeed "GPS Speed";
 CM_ SG_ 1011 UI_odometer "UI Odometer";
 CM_ SG_ 615 DI_gradeEst "Estimated Grade";
 CM_ SG_ 615 DI_mass "Estimated Mass";
-CM_ SG_ 642 VCLEFT_hvacBlowerRPMActual "HVAC Blower Speed";
 CM_ SG_ 647 PTC_leftCurrentHV "Heater Left Current";
 CM_ SG_ 647 PTC_rightCurrentHV "Heater Right Current";
 CM_ SG_ 647 PTC_voltageHV "Heater Voltage";
@@ -3157,9 +3160,6 @@ CM_ SG_ 472 RearTorque1D8 "Rear Motor Torque";
 CM_ SG_ 468 RAWTorqueFront1D4 "Front Torque Old, Axle torque 2 with 9/1 gearing";
 CM_ SG_ 469 FrontTorqueRequest1D5 "Front Motor Torque Request";
 CM_ SG_ 469 FrontTorque1D5 "Front Motor Torque";
-CM_ SG_ 741 FrontPower2E5 "Front Motor Power";
-CM_ SG_ 741 FrontPowerLimit2E5 "Front Power Limit, approx offset Orig scale 1";
-CM_ SG_ 741 FrontHeatPower2E5 "Front Waste Heat Power";
 CM_ SG_ 822 DriveRegenRating336 "Regen Rating";
 CM_ SG_ 822 DrivePowerRating336 "Power Rating";
 CM_ SG_ 616 SystemRegenPowerMax268 "Max Regen Power";
@@ -3231,9 +3231,9 @@ CM_ SG_ 950 Odometer3B6 "Odometer";
 CM_ SG_ 614 RearPowerLimit266 "Rear Power Limit, approx offset Orig scale 1";
 CM_ SG_ 614 RearHeatPower266 "Rear Waste Heat Power";
 CM_ SG_ 614 RearPower266 "Rear Motor Power";
-CM_ SG_ 741 FrontPower2E5 "Front Motor Power";
-CM_ SG_ 741 FrontPowerLimit2E5 "Front Power Limit, approx offset Orig scale 1";
-CM_ SG_ 741 FrontHeatPower2E5 "Front Waste Heat Power";
+CM_ SG_ 741 FrontPower2E5 "Front Motor PowerFront Motor Power";
+CM_ SG_ 741 FrontPowerLimit2E5 "Front Power Limit, approx offset Orig scale 1Front Power Limit, approx offset Orig scale 1";
+CM_ SG_ 741 FrontHeatPower2E5 "Front Waste Heat PowerFront Waste Heat Power";
 CM_ SG_ 264 DIR_axleSpeed "Rear Axle Speed";
 CM_ SG_ 264 DIR_torqueActual "Rear Axle Torque";
 CM_ SG_ 264 DIR_torqueCommand "Rear Axle Torque Request";
@@ -3362,6 +3362,33 @@ BA_ "GenMsgCycleTime" BO_ 799 1000;
 BA_ "GenMsgCycleTime" BO_ 1022 1000;
 BA_ "GenMsgCycleTime" BO_ 2047 100;
 BA_ "GenSigEnvVarType" SG_ 472 TorqueFlags1D8 0;
+VAL_ 3221225472 VCRIGHT_frontBuckleSwitch 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontOccupancySwitch 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatBackrestBack 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatBackrestForward 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatLiftDown 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatLiftUp 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatLumbarDown 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatLumbarIn 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatLumbarOut 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatLumbarUp 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatTiltDown 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatTiltUp 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_frontSeatTrackBack 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_rearCenterBuckleSwitch 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCRIGHT_rearRightBuckleSwitch 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
+VAL_ 3221225472 VCLEFT_blowerIndex 0 "HVAC_FEEDBACK_SIGNALS" 1 "HVAC_VARS" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerCBCCtrlState 4 "COUNT" 0 "ERROR" 1 "IDLE" 2 "OFFLINE" 3 "ONLINE" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerCBCEstState 14 "COUNT" 0 "ERROR" 1 "IDLE" 5 "IDRATED" 10 "INDUCTANCE_EST" 9 "LOCKROTOR" 12 "MOTOR_IDENTIFIED" 13 "ONLINE" 8 "RAMPDOWN" 4 "RAMPUP" 7 "RATEDFLUX" 6 "RATEDFLUX_OL" 11 "ROTOR_RESISTANCE" 2 "ROVERL" 3 "RS" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerFETTemp 127 "SNA" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerIPhase0 255 "SNA" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerIPhase1 255 "SNA" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerIPhase2 255 "SNA" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerITerm 127 "SNA" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerOutputDuty 127 "SNA" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerRs 255 "SNA" ;
+VAL_ 3221225472 VCLEFT_hvacBlowerTorque 1023 "SNA" ;
+VAL_ 3221225472 VCLEFT_hvacBlower_IO_CBC_Status 0 "IDLE" 1 "RX" ;
 VAL_ 12 UI_autopilotTrial 3 "ACTIVE" 0 "NONE" 1 "START" 2 "STOP" ;
 VAL_ 12 UI_cellNetworkTechnology 9 "CELL_NETWORK_CDMA" 2 "CELL_NETWORK_EDGE" 1 "CELL_NETWORK_GPRS" 8 "CELL_NETWORK_GSM" 4 "CELL_NETWORK_HSDPA" 6 "CELL_NETWORK_HSPA" 5 "CELL_NETWORK_HSUPA" 7 "CELL_NETWORK_LTE" 0 "CELL_NETWORK_NONE" 15 "CELL_NETWORK_SNA" 3 "CELL_NETWORK_UMTS" 10 "CELL_NETWORK_WCDMA" ;
 VAL_ 12 UI_cellSignalBars 5 "FIVE" 4 "FOUR" 1 "ONE" 7 "SNA" 3 "THREE" 2 "TWO" 0 "ZERO" ;
@@ -3475,8 +3502,6 @@ VAL_ 562 BMS_fcContactorRequest 1 "SET_REQUEST_CLOSE" 4 "SET_REQUEST_CLOSE_NEGAT
 VAL_ 562 BMS_fcLinkOkToEnergizeRequest 1 "FC_LINK_ENERGY_AC" 2 "FC_LINK_ENERGY_DC" 0 "FC_LINK_ENERGY_NONE" ;
 VAL_ 562 BMS_internalHvilSenseV 65535 "SNA" ;
 VAL_ 562 BMS_packContactorRequest 1 "SET_REQUEST_CLOSE" 4 "SET_REQUEST_CLOSE_NEGATIVE_ONLY" 5 "SET_REQUEST_CLOSE_POSITIVE_ONLY" 2 "SET_REQUEST_OPEN" 3 "SET_REQUEST_OPEN_IMMEDIATELY" 0 "SET_REQUEST_SNA" ;
-VAL_ 609 VCFRONT_batterySMState 0 "INIT" 1 "CHARGE" 2 "DISCHARGE" 3 "STANDBY" 4 "RESISTANCE_ESTIMATION" 5 "OTA_STANDBY" 6 "DISCONNECTED_BATTERY_TEST" 7 "SHORTED_CELL_TEST" 8 "FAULT" 9 "RECOVERY" ;
-VAL_ 609 VCFRONT_voltageProfile 0 "CHARGE" 1 "FLOAT" 2 "REDUCED_FLOAT" 3 "ALWAYS_CLOSED_CONTACTORS" ;
 VAL_ 627 UI_displayBrightnessLevel 255 "SNA" ;
 VAL_ 627 UI_domeLightSwitch 2 "DOME_LIGHT_SWITCH_AUTO" 0 "DOME_LIGHT_SWITCH_OFF" 1 "DOME_LIGHT_SWITCH_ON" ;
 VAL_ 627 UI_driveStateRequest 0 "DRIVE_STATE_REQ_IDLE" 1 "DRIVE_STATE_REQ_START" ;
@@ -3750,19 +3775,7 @@ VAL_ 615 DI_massConfidence 1 "MASS_CONFIDED" 0 "MASS_NOT_CONFIDED" ;
 VAL_ 615 DI_relativeTireTreadDepth 32 "SNA" ;
 VAL_ 615 DI_tireFitment 3 "FITMENT_SNA" 0 "FITMENT_SQUARE" 1 "FITMENT_STAGGERED" ;
 VAL_ 615 DI_trailerDetected 1 "TRAILER_DETECTED" 0 "TRAILER_NOT_DETECTED" ;
-VAL_ 642 VCLEFT_blowerIndex 0 "HVAC_FEEDBACK_SIGNALS" 1 "HVAC_VARS" ;
-VAL_ 642 VCLEFT_hvacBlowerCBCCtrlState 4 "COUNT" 0 "ERROR" 1 "IDLE" 2 "OFFLINE" 3 "ONLINE" ;
-VAL_ 642 VCLEFT_hvacBlowerCBCEstState 14 "COUNT" 0 "ERROR" 1 "IDLE" 5 "IDRATED" 10 "INDUCTANCE_EST" 9 "LOCKROTOR" 12 "MOTOR_IDENTIFIED" 13 "ONLINE" 8 "RAMPDOWN" 4 "RAMPUP" 7 "RATEDFLUX" 6 "RATEDFLUX_OL" 11 "ROTOR_RESISTANCE" 2 "ROVERL" 3 "RS" ;
-VAL_ 642 VCLEFT_hvacBlowerFETTemp 127 "SNA" ;
-VAL_ 642 VCLEFT_hvacBlowerIPhase0 255 "SNA" ;
-VAL_ 642 VCLEFT_hvacBlowerIPhase1 255 "SNA" ;
-VAL_ 642 VCLEFT_hvacBlowerIPhase2 255 "SNA" ;
-VAL_ 642 VCLEFT_hvacBlowerITerm 127 "SNA" ;
-VAL_ 642 VCLEFT_hvacBlowerOutputDuty 127 "SNA" ;
 VAL_ 642 VCLEFT_hvacBlowerRPMTarget 1023 "SNA" ;
-VAL_ 642 VCLEFT_hvacBlowerRs 255 "SNA" ;
-VAL_ 642 VCLEFT_hvacBlowerTorque 1023 "SNA" ;
-VAL_ 642 VCLEFT_hvacBlower_IO_CBC_Status 0 "IDLE" 1 "RX" ;
 VAL_ 755 UI_hvacReqACDisable 0 "AUTO" 1 "OFF" 2 "ON" ;
 VAL_ 755 UI_hvacReqAirDistributionMode 0 "AUTO" 4 "MANUAL_DEFROST" 5 "MANUAL_DEFROST_FLOOR" 6 "MANUAL_DEFROST_PANEL" 7 "MANUAL_DEFROST_PANEL_FLOOR" 1 "MANUAL_FLOOR" 2 "MANUAL_PANEL" 3 "MANUAL_PANEL_FLOOR" ;
 VAL_ 755 UI_hvacReqBlowerSegment 1 "1" 10 "10" 2 "2" 3 "3" 4 "4" 5 "5" 6 "6" 7 "7" 8 "8" 9 "9" 11 "AUTO" 0 "OFF" ;
@@ -3792,22 +3805,7 @@ VAL_ 947 UI_lightSwitch 0 "LIGHT_SWITCH_AUTO" 3 "LIGHT_SWITCH_OFF" 1 "LIGHT_SWIT
 VAL_ 947 UI_shorted12VCellTestMode 2 "SHORTED_CELL_TEST_MODE_ACTIVE" 0 "SHORTED_CELL_TEST_MODE_DISABLED" 1 "SHORTED_CELL_TEST_MODE_SHADOW" ;
 VAL_ 947 UI_summonState 3 "ACTIVE" 1 "IDLE" 2 "PRE_PRIMED" 0 "SNA" ;
 VAL_ 947 UI_windowRequest 3 "WINDOW_REQUEST_GOTO_CLOSED" 4 "WINDOW_REQUEST_GOTO_OPEN" 1 "WINDOW_REQUEST_GOTO_PERCENT" 2 "WINDOW_REQUEST_GOTO_VENT" 0 "WINDOW_REQUEST_IDLE" ;
-VAL_ 963 VCRIGHT_frontBuckleSwitch 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontOccupancySwitch 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatBackrestBack 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatBackrestForward 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatLiftDown 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatLiftUp 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatLumbarDown 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatLumbarIn 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatLumbarOut 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatLumbarUp 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatTiltDown 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatTiltUp 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_frontSeatTrackBack 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
 VAL_ 963 VCRIGHT_frontSeatTrackForward 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_rearCenterBuckleSwitch 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
-VAL_ 963 VCRIGHT_rearRightBuckleSwitch 3 "SWITCH_FAULT" 1 "SWITCH_OFF" 2 "SWITCH_ON" 0 "SWITCH_SNA" ;
 VAL_ 995 VCRIGHT_brakeLightStatus 2 "LIGHT_FAULT" 0 "LIGHT_OFF" 1 "LIGHT_ON" 3 "LIGHT_SNA" ;
 VAL_ 995 VCRIGHT_interiorTrunkLightStatus 2 "LIGHT_FAULT" 0 "LIGHT_OFF" 1 "LIGHT_ON" 3 "LIGHT_SNA" ;
 VAL_ 995 VCRIGHT_rearFogLightStatus 2 "LIGHT_FAULT" 0 "LIGHT_OFF" 1 "LIGHT_ON" 3 "LIGHT_SNA" ;
@@ -4176,6 +4174,8 @@ VAL_ 513 VCFRONT_solenoidEvapState 2 "CLOSED" 3 "FAULTED" 1 "OPENED" 0 "UNDEFINE
 VAL_ 513 VCFRONT_tempRefrigDischarge 2047 "SNA" ;
 VAL_ 513 VCFRONT_tempRefrigLiquid 2047 "SNA" ;
 VAL_ 513 VCFRONT_tempSuperheatActual 1023 "SNA" ;
+VAL_ 609 VCFRONT_batterySMState 0 "INIT" 1 "CHARGE" 2 "DISCHARGE" 3 "STANDBY" 4 "RESISTANCE_ESTIMATION" 5 "OTA_STANDBY" 6 "DISCONNECTED_BATTERY_TEST" 7 "SHORTED_CELL_TEST" 8 "FAULT" 9 "RECOVERY" ;
+VAL_ 609 VCFRONT_voltageProfile 0 "CHARGE" 1 "FLOAT" 2 "REDUCED_FLOAT" 3 "ALWAYS_CLOSED_CONTACTORS" ;
 VAL_ 548 DCDCstate224 6 "Error" 5 "Shutdown" 4 "HVactive" 3 "Precharge" 2 "PrechargeStart" 1 "12vChg" 0 "Idle" ;
 VAL_ 548 DCDCSubState224 0 "PWR_UP_INIT" 1 "STANDBY" 2 "12V_SUPPORT_ACTIVE" 3 "DIS_HVBUS" 4 "PCHG_FAST_DIS_HVBUS" 5 "PCHG_SLOW_DIS_HVBUS" 6 "PCHG_DWELL_CHARGE" 7 "PCHG_DWELL_WAIT" 8 "PCHG_DI_RECOVERY_WAIT" 9 "PCHG_ACTIVE" 10 "PCHG_FLT_FAST_DIS_HVBUS" 11 "SHUTDOWN" 12 "12V_SUPPORT_FAULTED" 13 "DIS_HVBUS_FAULTED" 14 "PCHG_FAULTED" 15 "CLEAR_FAULTS" 16 "FAULTED" 17 "NUM" ;
 VAL_ 551 CMP_state 3 "CMP_STATE_FAULT" 0 "CMP_STATE_NONE" 1 "CMP_STATE_NORMAL" 15 "CMP_STATE_SNA" 5 "CMP_STATE_SOFT_SHUTDOWN" 4 "CMP_STATE_SOFT_START" 2 "CMP_STATE_WAIT" ;
@@ -4195,8 +4195,8 @@ VAL_ 850 BMS_expectedEnergyRemaining 2047 "SNA" ;
 VAL_ 850 BMS_idealEnergyRemaining 2047 "SNA" ;
 VAL_ 850 BMS_nominalEnergyRemaining 2047 "SNA" ;
 VAL_ 850 BMS_nominalFullPackEnergy 2047 "SNA" ;
-VAL_ 914 BMS_moduleType 0 "UNKNOWN" 1 "E3_NCT" 2 "E1_NCT" 3 "E3_CT" 4 "E1_CT" 5 "E1_CP" ;
 VAL_ 914 BMS_packConfigMultiplexer 0 "Mux0" 1 "Mux1" ;
+VAL_ 914 BMS_moduleType 0 "UNKNOWN" 1 "E3_NCT" 2 "E1_NCT" 3 "E3_CT" 4 "E1_CT" 5 "E1_CP" ;
 VAL_ 914 BMS_reservedConfig_0 0 "BMS_CONFIG_0" 1 "BMS_CONFIG_1" 10 "BMS_CONFIG_10" 11 "BMS_CONFIG_11" 12 "BMS_CONFIG_12" 13 "BMS_CONFIG_13" 14 "BMS_CONFIG_14" 15 "BMS_CONFIG_15" 16 "BMS_CONFIG_16" 17 "BMS_CONFIG_17" 18 "BMS_CONFIG_18" 19 "BMS_CONFIG_19" 2 "BMS_CONFIG_2" 20 "BMS_CONFIG_20" 21 "BMS_CONFIG_21" 22 "BMS_CONFIG_22" 23 "BMS_CONFIG_23" 24 "BMS_CONFIG_24" 25 "BMS_CONFIG_25" 26 "BMS_CONFIG_26" 27 "BMS_CONFIG_27" 28 "BMS_CONFIG_28" 29 "BMS_CONFIG_29" 3 "BMS_CONFIG_3" 30 "BMS_CONFIG_30" 31 "BMS_CONFIG_31" 4 "BMS_CONFIG_4" 5 "BMS_CONFIG_5" 6 "BMS_CONFIG_6" 7 "BMS_CONFIG_7" 8 "BMS_CONFIG_8" 9 "BMS_CONFIG_9" ;
 VAL_ 594 BMS_powerLimitsState 1 "POWER_CALCULATED_FOR_DRIVE" 0 "POWER_NOT_CALCULATED_FOR_DRIVE" ;
 VAL_ 658 BattBeginningOfLifeEnergy292 1023 "SNA" ;

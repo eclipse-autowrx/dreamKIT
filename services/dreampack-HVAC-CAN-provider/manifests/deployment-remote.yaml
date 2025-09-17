@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dk-service-can-provider
+  namespace: default
+  labels:
+    app: dk-service-can-provider
+    version: latest
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  selector:
+    matchLabels:
+      app: dk-service-can-provider
+  template:
+    metadata:
+      labels:
+        app: dk-service-can-provider
+        version: latest
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: vip  # k3s agent node for service deployment
+      hostNetwork: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+      tolerations:
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 300
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 300
+      containers:
+        - name: dk-service-can-provider
+          image: ghcr.io/eclipse-autowrx/dk_service_can_provider:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+          env:
+            - name: CAN_PORT
+              value: "can1"
+            - name: KUKSA_ADDRESS
+              value: "192.168.56.48"
+            - name: MAPPING_FILE
+              value: "mapping/vss_4.0/vss_dbc.json"
+            - name: LOG_LEVEL
+              value: "INFO"
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: var-tmp
+              mountPath: /var/tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: var-tmp
+          emptyDir: {}

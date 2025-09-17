@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mirror-dk-service-can-provider
+  namespace: default
+  labels:
+    app: dk-service-can-provider
+    component: mirror
+    source: local
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300  # Clean up job after 5 minutes
+  template:
+    metadata:
+      labels:
+        app: dk-service-can-provider
+        component: mirror
+        source: local
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/hostname: xip  # k3s agent node (should be same as build node)
+      restartPolicy: Never
+      containers:
+        - name: mirror-local
+          image: quay.io/containers/skopeo:latest
+          command: ["skopeo", "copy"]
+          args:
+            - "--retry-times=3"
+            - "--all"
+            - "--dest-tls-verify=false"
+            - "docker-daemon:dk_service_can_provider:latest"  # From local Docker daemon
+            - "docker://localhost:5000/dk_service_can_provider:latest"  # To k3s registry
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          env:
+            - name: SKOPEO_TMPDIR
+              value: "/tmp"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+              readOnly: true
+          securityContext:
+            privileged: true  # Required for Docker socket access
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
