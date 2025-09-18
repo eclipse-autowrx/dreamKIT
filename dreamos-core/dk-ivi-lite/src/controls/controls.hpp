@@ -36,7 +36,12 @@ public:
     // HVAC controls
     Q_INVOKABLE void qml_setApi_hvac_driverSide_FanSpeed(uint8_t speed);
     Q_INVOKABLE void qml_setApi_hvac_passengerSide_FanSpeed(uint8_t speed);
-    
+
+    // Connection management methods for QML
+    Q_INVOKABLE bool isConnected() const;
+    Q_INVOKABLE void forceReconnect();
+    Q_INVOKABLE int getReconnectionAttempts() const;
+
     void vssSubsribeCallback(const std::string &updatePath, const std::string &updateValue); 
 
 Q_SIGNALS:
@@ -50,7 +55,26 @@ Q_SIGNALS:
     void updateWidget_hvac_driverSide_FanSpeed(int speed);
     void updateWidget_hvac_passengerSide_FanSpeed(int speed);
 
+    // Connection state signals
+    void connectionStateChanged(bool connected);
+    void connectionError(const QString &errorMessage);
+    void reconnectionAttempt(int attemptNumber);
+    void subscriptionsRestored();
+
 private:
+    // Connection monitoring members
+    QTimer *connectionMonitorTimer;
+    bool lastKnownConnectionState;
+    int reconnectionAttempts;
+    bool subscriptionsActive;
+    QTimer *reconnectionTimer;
+
+    // Internal methods for connection management
+    void checkConnectionState();
+    void handleConnectionLost();
+    void handleConnectionRestored();
+    void reestablishSubscriptions();
+    void enableAutoReconnection();
 };
 
 #endif // CONTROLPAGE_H

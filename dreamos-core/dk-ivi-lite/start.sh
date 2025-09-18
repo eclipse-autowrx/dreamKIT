@@ -49,27 +49,69 @@ show_info "You can also modify the run.sh script to fit your environment and req
 show_info "For debugging, you can run command ""k9s --kubeconfig ~/.kube/config"""
 
 
-# export DKCODE="dreamKIT"
-# export DK_USER=$USER
-# export DK_DOCKER_HUB_NAMESPACE="ghcr.io/samtranbosch"
-# export DK_ARCH="amd64"
-# export DK_CONTAINER_ROOT="/app/.dk/"
-# export DK_VIP="true"
-# export DK_VSS_VER="VSS_4.0"
-# export KUBECONFIG=$HOME/.kube/config
+# Detect environment and set variables
+detect_environment() {
+    show_info "Detecting environment configuration..."
 
-# docker kill dk_ivi; docker rm dk_ivi ;
+    # Detect architecture
+    local arch=$(uname -m)
+    case $arch in
+        x86_64)
+            export ARCH="amd64"
+            ;;
+        aarch64|arm64)
+            export ARCH="arm64"
+            ;;
+        *)
+            show_info "Unknown architecture: $arch, defaulting to amd64"
+            export ARCH="amd64"
+            ;;
+    esac
 
-# docker run -d -it --name dk_ivi \
-#     --network host --restart unless-stopped \
-#     --device /dev/dri:/dev/dri \
-#     -e DISPLAY=:0 -e DK_USER=$DK_USER -e DK_ARCH=$DK_ARCH \
-#     -e DK_DOCKER_HUB_NAMESPACE=$DK_DOCKER_HUB_NAMESPACE -e DK_VIP=$DK_VIP -e DK_CONTAINER_ROOT=$DK_CONTAINER_ROOT -e DKCODE=dreamKIT\
-#     -v /tmp/.X11-unix:/tmp/.X11-unix \
-#     -v ~/.dk:/app/.dk \
-#     -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker \
-#     -v /usr/local/bin/kubectl:/usr/local/bin/kubectl:ro -v $KUBECONFIG:/root/.kube/config:ro \
-#     dk_ivi:latest
+    # Detect user and home directory based on existing users
+    if id "sdv-orin" &>/dev/null; then
+        export DK_USER="sdv-orin"
+        export HOME_DIR="/home/sdv-orin"
+        show_info "Detected Jetson environment (user: sdv-orin, arch: $ARCH)"
+    elif id "developer" &>/dev/null; then
+        export DK_USER="developer"
+        export HOME_DIR="/home/developer"
+        show_info "Detected development environment (user: developer, arch: $ARCH)"
+    else
+        export DK_USER=$USER
+        export HOME_DIR=$HOME
+        show_info "Using current user environment (user: $DK_USER, arch: $ARCH)"
+    fi
+
+    # Set other environment variables
+    export DKCODE="dreamKIT"
+    export DOCKER_HUB_NAMESPACE="ghcr.io/eclipse-autowrx"
+    export DK_CONTAINER_ROOT="/app/.dk/"
+    export DK_VIP=""
+    export DISPLAY="${DISPLAY:-:0}"
+
+    show_info "Environment variables set:"
+    show_info "  DK_USER: $DK_USER"
+    show_info "  HOME_DIR: $HOME_DIR"
+    show_info "  ARCH: $ARCH"
+    show_info "  DOCKER_HUB_NAMESPACE: $DOCKER_HUB_NAMESPACE"
+    show_info "  DISPLAY: $DISPLAY"
+}
+
+# Apply manifest with environment variable substitution
+apply_manifest() {
+    show_info "Applying manifest with environment substitution..."
+
+    # Create temporary manifest with substituted variables
+    local temp_manifest=$(mktemp)
+    envsubst < manifests/dk-ivi.yaml > "$temp_manifest"
+
+    kubectl apply -f "$temp_manifest"
+    rm "$temp_manifest"
+}
+
+# Detect environment
+detect_environment
 
 kubectl delete deployment.apps/dk-ivi --ignore-not-found
 
@@ -77,4 +119,4 @@ docker save dk_ivi:latest > dk_ivi.tar
 sudo k3s ctr images import dk_ivi.tar
 rm dk_ivi.tar
 
-kubectl apply -f manifests/dk-ivi.yaml
+apply_manifest
