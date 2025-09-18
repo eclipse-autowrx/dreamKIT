@@ -107,6 +107,9 @@ public:
   // Blocks/destroys all subscription threads and clients.
   void shutdown();
 
+  // Non-blocking shutdown suitable for Qt application termination
+  void shutdownAsync();
+
   // Connection status and control
   bool isConnected(const std::string &serverURI) const;
   void setAutoReconnect(const std::string &serverURI, bool enabled);

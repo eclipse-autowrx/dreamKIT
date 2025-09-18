@@ -147,6 +147,9 @@ public:
   // Wait for all subscription threads to finish.
   void joinAllSubscriptions();
 
+  // Wait for all subscription threads to finish with timeout.
+  void joinAllSubscriptionsWithTimeout();
+
   // Detach all subscription threads.
   void detachAllSubscriptions();
 
@@ -223,6 +226,9 @@ private:
   mutable std::atomic<bool> connected_{false};
   std::atomic<bool> autoReconnect_{true};
   std::atomic<bool> shouldStop_{false};
+
+  // Connection synchronization
+  mutable std::mutex connectionMutex_;
 
   // Reconnection mechanism
   std::mutex reconnectMutex_;

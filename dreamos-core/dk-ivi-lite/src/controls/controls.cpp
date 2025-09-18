@@ -347,5 +347,13 @@ void ControlsAsync::qml_setApi_hvac_passengerSide_FanSpeed(uint8_t speed)
 
 ControlsAsync::~ControlsAsync()
 {
+    qDebug() << __func__ << __LINE__ << "  destroying ControlsAsync";
+
+    // Use async shutdown to prevent blocking Qt application termination
+    // This detaches subscription threads immediately without waiting for them to join
+    // Prevents "QThread: Destroyed while thread is still running" errors
+    // while allowing quick application shutdown
+    VAPI_CLIENT.shutdownAsync();
+
     qDebug() << __func__ << __LINE__ << "  destroyed ControlsAsync";
 }
