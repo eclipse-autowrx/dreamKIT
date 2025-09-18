@@ -10,8 +10,10 @@
 #include <QDebug>
 #include <QMetaObject>
 #include <QString>
+#include <QTimer>
 
 #include "../platform/integrations/vehicle-api/vapiclient.hpp"
+#include "../platform/notifications/notificationmanager.hpp"
 
 //------------------------------------------------------------------------------
 // Vehicle API keys
@@ -31,8 +33,22 @@ namespace VehicleAPI {
 
 //------------------------------------------------------------------------------
 ControlsAsync::ControlsAsync()
+    : connectionMonitorTimer(nullptr)
+    , lastKnownConnectionState(false)
+    , reconnectionAttempts(0)
+    , subscriptionsActive(false)
+    , reconnectionTimer(nullptr)
 {
     qDebug() << __func__ << __LINE__ << "  constructing ControlsAsync";
+
+    // Initialize connection monitoring
+    connectionMonitorTimer = new QTimer(this);
+    connectionMonitorTimer->setInterval(2000); // Check every 2 seconds
+    connect(connectionMonitorTimer, &QTimer::timeout, this, &ControlsAsync::checkConnectionState);
+
+    reconnectionTimer = new QTimer(this);
+    reconnectionTimer->setSingleShot(true);
+    connect(reconnectionTimer, &QTimer::timeout, this, &ControlsAsync::enableAutoReconnection);
 
     // Initialize the VAPI client instance.
     DK_VSS_VER = qgetenv("DK_VSS_VER");
@@ -60,8 +76,18 @@ ControlsAsync::ControlsAsync()
     //    store them if it needs them for subscribeAll).
     if (!VAPI_CLIENT.connectToServer(DK_VAPI_DATABROKER, signalPaths)) {
         qCritical() << "Could not connect to VAPI server:" << DK_VAPI_DATABROKER;
+        lastKnownConnectionState = false;
+        emit connectionError(QString("Failed to connect to VAPI server: %1").arg(DK_VAPI_DATABROKER));
+        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        // Start monitoring for reconnection
+        reconnectionTimer->start(5000); // Try to enable auto-reconnect after 5 seconds
         return;
     }
+
+    // Enable auto-reconnection on the VAPI client
+    VAPI_CLIENT.setAutoReconnect(DK_VAPI_DATABROKER, true);
+    lastKnownConnectionState = true;
+    emit connectionStateChanged(true);
 
     // 3) Now subscribe to *target*‐value updates.
     //    Our SubscribeCallback signature is:
@@ -106,6 +132,10 @@ ControlsAsync::ControlsAsync()
         );
       }
     );
+    subscriptionsActive = true;
+
+    // Start connection monitoring after subscriptions are set up
+    connectionMonitorTimer->start();
 }
 
 void ControlsAsync::init()
@@ -215,6 +245,14 @@ void ControlsAsync::vssSubsribeCallback(const std::string &path,
 void ControlsAsync::qml_setApi_lightCtr_LowBeam(bool sts)
 {
     qDebug() << "QML → set LowBeam =" << sts;
+
+    if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
+        qWarning() << "Cannot set LowBeam: VAPI client not connected";
+        emit connectionError("Cannot set vehicle data: not connected to server");
+        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        return;
+    }
+
     VAPI_CLIENT.setCurrentValue<bool>(
       DK_VAPI_DATABROKER,
       VehicleAPI::V_Bo_Lights_Beam_Low_IsOn,
@@ -237,6 +275,13 @@ void ControlsAsync::qml_setApi_lightCtr_LowBeam(bool sts)
 void ControlsAsync::qml_setApi_lightCtr_HighBeam(bool sts)
 {
     qDebug() << "QML → set HighBeam =" << sts;
+
+    if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
+        qWarning() << "Cannot set HighBeam: VAPI client not connected";
+        emit connectionError("Cannot set vehicle data: not connected to server");
+        return;
+    }
+
     VAPI_CLIENT.setCurrentValue<bool>(
       DK_VAPI_DATABROKER,
       VehicleAPI::V_Bo_Lights_Beam_High_IsOn, sts);
@@ -256,6 +301,14 @@ void ControlsAsync::qml_setApi_lightCtr_HighBeam(bool sts)
 void ControlsAsync::qml_setApi_lightCtr_Hazard(bool sts)
 {
     qDebug() << "QML → set Hazard =" << sts;
+
+    if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
+        qWarning() << "Cannot set Hazard: VAPI client not connected";
+        emit connectionError("Cannot set vehicle data: not connected to server");
+        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        return;
+    }
+
     VAPI_CLIENT.setCurrentValue<bool>(
       DK_VAPI_DATABROKER,
       VehicleAPI::V_Bo_Lights_Hazard_IsSignaling,
@@ -280,6 +333,14 @@ void ControlsAsync::qml_setApi_seat_driverSide_position(int position)
         qWarning() << "Invalid seat position:" << position;
         return;
     }
+
+    if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
+        qWarning() << "Cannot set seat position: VAPI client not connected";
+        emit connectionError("Cannot set vehicle data: not connected to server");
+        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        return;
+    }
+
     qDebug() << "QML → set SeatPos =" << position;
     uint8_t p = static_cast<uint8_t>(position);
 
@@ -303,7 +364,14 @@ void ControlsAsync::qml_setApi_seat_driverSide_position(int position)
 
 void ControlsAsync::qml_setApi_hvac_driverSide_FanSpeed(uint8_t speed)
 {
-  uint8_t scaledSpeed = speed * 10;
+    if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
+        qWarning() << "Cannot set driver fan speed: VAPI client not connected";
+        emit connectionError("Cannot set vehicle data: not connected to server");
+        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        return;
+    }
+
+    uint8_t scaledSpeed = speed * 10;
     qDebug() << "QML → set DriverFanSpeed =" << speed << "(scaled" << scaledSpeed << ")";
     VAPI_CLIENT.setCurrentValue<uint8_t>(
       DK_VAPI_DATABROKER,
@@ -325,7 +393,14 @@ void ControlsAsync::qml_setApi_hvac_driverSide_FanSpeed(uint8_t speed)
 
 void ControlsAsync::qml_setApi_hvac_passengerSide_FanSpeed(uint8_t speed)
 {
-  uint8_t scaledSpeed = speed * 10;
+    if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
+        qWarning() << "Cannot set passenger fan speed: VAPI client not connected";
+        emit connectionError("Cannot set vehicle data: not connected to server");
+        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        return;
+    }
+
+    uint8_t scaledSpeed = speed * 10;
     qDebug() << "QML → set PassengerFanSpeed =" << speed << "(scaled" << scaledSpeed << ")";
     VAPI_CLIENT.setCurrentValue<uint8_t>(
       DK_VAPI_DATABROKER,
@@ -347,5 +422,164 @@ void ControlsAsync::qml_setApi_hvac_passengerSide_FanSpeed(uint8_t speed)
 
 ControlsAsync::~ControlsAsync()
 {
+    qDebug() << __func__ << __LINE__ << "  destroying ControlsAsync";
+
+    // Stop connection monitoring
+    if (connectionMonitorTimer) {
+        connectionMonitorTimer->stop();
+    }
+    if (reconnectionTimer) {
+        reconnectionTimer->stop();
+    }
+
+    // Use async shutdown to prevent blocking Qt application termination
+    // This detaches subscription threads immediately without waiting for them to join
+    // Prevents "QThread: Destroyed while thread is still running" errors
+    // while allowing quick application shutdown
+    VAPI_CLIENT.shutdownAsync();
+
     qDebug() << __func__ << __LINE__ << "  destroyed ControlsAsync";
+}
+
+//------------------------------------------------------------------------------
+// Connection monitoring and management methods
+//------------------------------------------------------------------------------
+
+void ControlsAsync::checkConnectionState()
+{
+    bool currentState = VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER);
+
+    if (currentState != lastKnownConnectionState) {
+        qDebug() << "Connection state changed:" << currentState;
+        lastKnownConnectionState = currentState;
+        emit connectionStateChanged(currentState);
+
+        if (currentState) {
+            handleConnectionRestored();
+        } else {
+            handleConnectionLost();
+        }
+    }
+}
+
+void ControlsAsync::handleConnectionLost()
+{
+    qWarning() << "Connection to VAPI server lost";
+    subscriptionsActive = false;
+    reconnectionAttempts = 0;
+    emit connectionError("Connection to VAPI server lost");
+    NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+
+    // Start attempting reconnection
+    enableAutoReconnection();
+}
+
+void ControlsAsync::handleConnectionRestored()
+{
+    qInfo() << "Connection to VAPI server restored";
+    reconnectionAttempts = 0;
+
+    // Re-establish subscriptions after a short delay to ensure connection is stable
+    QTimer::singleShot(1000, this, &ControlsAsync::reestablishSubscriptions);
+}
+
+void ControlsAsync::reestablishSubscriptions()
+{
+    qInfo() << "Re-establishing subscriptions";
+
+    // Build the list of signal paths we want to subscribe to
+    std::vector<std::string> signalPaths = {
+        VehicleAPI::V_Bo_Lights_Beam_Low_IsOn,
+        VehicleAPI::V_Bo_Lights_Beam_High_IsOn,
+        VehicleAPI::V_Bo_Lights_Hazard_IsSignaling,
+        VehicleAPI::V_Ca_Seat_R1_DriverSide_Position,
+        VehicleAPI::V_Ca_HVAC_Station_R1_Driver_FanSpeed,
+        VehicleAPI::V_Ca_HVAC_Station_R1_Passenger_FanSpeed
+    };
+
+    // Re-subscribe to target values
+    VAPI_CLIENT.subscribeTarget(
+      DK_VAPI_DATABROKER,
+      signalPaths,
+      [this](const std::string &path,
+             const std::string &value,
+             const int         &field) {
+        Q_UNUSED(field);
+        // invoke our member function in the GUI thread:
+        QMetaObject::invokeMethod(
+          this,
+          [this, path, value]() {
+            this->vssSubsribeCallback(path, value);
+          },
+          Qt::QueuedConnection
+        );
+      }
+    );
+
+    // Re-subscribe to current values
+    VAPI_CLIENT.subscribeCurrent(
+      DK_VAPI_DATABROKER,
+      signalPaths,
+      [this](const std::string &path,
+             const std::string &value,
+             const int         &field) {
+        Q_UNUSED(field);
+        // invoke our member function in the GUI thread:
+        QMetaObject::invokeMethod(
+          this,
+          [this, path, value]() {
+            this->vssSubsribeCallback(path, value);
+          },
+          Qt::QueuedConnection
+        );
+      }
+    );
+
+    subscriptionsActive = true;
+    emit subscriptionsRestored();
+
+    // Refresh current values after re-subscription
+    QTimer::singleShot(500, this, &ControlsAsync::init);
+}
+
+void ControlsAsync::enableAutoReconnection()
+{
+    if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
+        reconnectionAttempts++;
+        qInfo() << "Attempting reconnection #" << reconnectionAttempts;
+        emit reconnectionAttempt(reconnectionAttempts);
+
+        // Enable auto-reconnection on the VAPI client
+        VAPI_CLIENT.setAutoReconnect(DK_VAPI_DATABROKER, true);
+
+        // Try forcing a reconnection
+        bool reconnected = VAPI_CLIENT.forceReconnect(DK_VAPI_DATABROKER);
+        if (!reconnected) {
+            // If reconnection failed, try again after exponential backoff
+            int delay = std::min(1000 * (1 << std::min(reconnectionAttempts - 1, 6)), 30000); // Max 30 seconds
+            qDebug() << "Reconnection failed, retrying in" << delay << "ms";
+            reconnectionTimer->start(delay);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+// QML-invokable connection management methods
+//------------------------------------------------------------------------------
+
+bool ControlsAsync::isConnected() const
+{
+    return VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER);
+}
+
+void ControlsAsync::forceReconnect()
+{
+    qInfo() << "QML requested force reconnection";
+    reconnectionAttempts = 0;
+    enableAutoReconnection();
+}
+
+int ControlsAsync::getReconnectionAttempts() const
+{
+    return reconnectionAttempts;
 }
