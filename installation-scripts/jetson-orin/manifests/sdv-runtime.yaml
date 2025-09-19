@@ -137,6 +137,9 @@ spec:
             memory: "512Mi"
             cpu: "1000m"
         
+        securityContext:
+          privileged: true
+          
         env:
         - name: RUNTIME_NAME
           value: "${RUNTIME_NAME}"
@@ -235,14 +238,3 @@ spec:
           type: DirectoryOrCreate
       - name: shared-vss
         emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: sdv-databroker
-spec:
-  selector:
-    app: sdv-runtime
-  ports:
-  - port: 55555
-    targetPort: 55555
