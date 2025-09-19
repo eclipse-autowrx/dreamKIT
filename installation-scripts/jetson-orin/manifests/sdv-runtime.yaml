@@ -235,3 +235,14 @@ spec:
           type: DirectoryOrCreate
       - name: shared-vss
         emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sdv-databroker
+spec:
+  selector:
+    app: sdv-runtime
+  ports:
+  - port: 55555
+    targetPort: 55555

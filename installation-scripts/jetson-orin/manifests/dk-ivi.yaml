@@ -227,14 +227,7 @@ spec:
             cpu: "1500m"  # Increased for better performance
         
         securityContext:
-          runAsNonRoot: false
-          runAsUser: 0
-          privileged: false
-          allowPrivilegeEscalation: true
-          capabilities:
-            add:
-            - NET_ADMIN
-            - SYS_ADMIN
+          privileged: true
         env:
         - name: DISPLAY
           value: "${DISPLAY}"
