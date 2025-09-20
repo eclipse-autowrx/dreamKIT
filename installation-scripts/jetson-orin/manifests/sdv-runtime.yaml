@@ -139,7 +139,7 @@ spec:
         
         securityContext:
           privileged: true
-          
+
         env:
         - name: RUNTIME_NAME
           value: "${RUNTIME_NAME}"
@@ -238,3 +238,14 @@ spec:
           type: DirectoryOrCreate
       - name: shared-vss
         emptyDir: {}
+---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: sdv-runtime-service
+  spec:
+    selector:
+      app: sdv-runtime
+    ports:
+    - port: 55555
+      targetPort: 55555
