@@ -74,7 +74,7 @@ spec:
         kubernetes.io/hostname: xip
       hostNetwork: true
       restartPolicy: Always
-      terminationGracePeriodSeconds: 30  # Reduced from 60 for faster cleanup
+      terminationGracePeriodSeconds: 15  # Further reduced for faster offline recovery
       
       tolerations:
       - key: "node.kubernetes.io/unreachable"
@@ -98,66 +98,7 @@ spec:
         runAsNonRoot: false
         runAsUser: 0
       
-      # Optimized init container with faster SDV runtime detection
-      initContainers:
-      - name: wait-for-sdv-runtime
-        image: alpine:latest
-        imagePullPolicy: IfNotPresent
-        command: ['sh', '-c']
-        args:
-        - |
-          set -e
-          echo "=== Fast SDV Runtime Check ==="
-          
-          # Quick kubectl access verification
-          nsenter -t 1 -m -p kubectl get deployments > /dev/null 2>&1 || {
-            echo "✗ Cannot access host kubectl"
-            exit 1
-          }
-          echo "✓ Host kubectl access ready"
-          
-          # Optimized SDV runtime check with shorter timeout
-          if nsenter -t 1 -m -p kubectl get deployment sdv-runtime > /dev/null 2>&1; then
-            echo "✓ Found SDV Runtime deployment"
-            # Reduced timeout for faster failure/success detection
-            nsenter -t 1 -m -p kubectl wait --for=condition=available --timeout=120s deployment/sdv-runtime || {
-              echo "⚠ SDV Runtime taking longer than expected, proceeding anyway"
-            }
-            echo "✓ SDV Runtime check complete"
-          else
-            echo "⚠ SDV Runtime not found, proceeding"
-          fi
-          
-          echo "=== Init completed ==="
-        
-        securityContext:
-          privileged: true  # Required for nsenter
-        
-        volumeMounts:
-        - name: offline-tools
-          mountPath: /host-bin
-          readOnly: true
-        - name: kubectl-binary
-          mountPath: /usr/local/bin/kubectl
-          readOnly: true
-        - name: kube-config
-          mountPath: /root/.kube/config
-          readOnly: true
-        
-        # Increased resources for faster init
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"  # Doubled for faster execution
-          limits:
-            memory: "128Mi"
-            cpu: "300m"  # Increased limit
-      
       volumes:
-      - name: offline-tools
-        hostPath:
-          path: /opt/k3s-tools/bin
-          type: Directory
       - name: dk-home
         hostPath: 
           path: ${HOME_DIR}/.dk
@@ -190,32 +131,32 @@ spec:
         image: ${DOCKER_HUB_NAMESPACE}/dk_ivi:latest
         imagePullPolicy: IfNotPresent
         
-        # Optimized startup probe with faster detection
+        # Fast startup probe for offline mode
         startupProbe:
           exec:
-            command: ["/bin/sh", "-c", "echo 'startup check' && sleep 1"]  # Reduced sleep
-          initialDelaySeconds: 20  # Reduced from 45
-          periodSeconds: 5         # Reduced from 15
-          timeoutSeconds: 3        # Reduced from 10
-          failureThreshold: 20     # Increased to maintain coverage but check faster
+            command: ["/bin/sh", "-c", "echo 'startup check'"]
+          initialDelaySeconds: 10  # Further reduced for offline mode
+          periodSeconds: 3         # Faster checks
+          timeoutSeconds: 2        # Reduced timeout
+          failureThreshold: 15     # Reduced for faster startup
         
-        # Faster readiness probe
+        # Optimized readiness probe for offline mode
         readinessProbe:
           exec:
             command: ["/bin/sh", "-c", "echo 'ready'"]
-          initialDelaySeconds: 25  # Reduced from 60
-          periodSeconds: 5         # Reduced from 20
-          timeoutSeconds: 3        # Reduced from 10
+          initialDelaySeconds: 15  # Further reduced for offline mode
+          periodSeconds: 3         # Faster checks
+          timeoutSeconds: 2        # Reduced timeout
           failureThreshold: 3
         
-        # Optimized liveness probe
+        # Optimized liveness probe for offline mode
         livenessProbe:
           exec:
             command: ["/bin/sh", "-c", "echo 'alive'"]
-          initialDelaySeconds: 35  # Reduced from 120
-          periodSeconds: 20        # Reduced from 45
-          timeoutSeconds: 5        # Reduced from 15
-          failureThreshold: 3      # Reduced from 5
+          initialDelaySeconds: 20  # Further reduced for offline mode
+          periodSeconds: 15        # Faster checks
+          timeoutSeconds: 3        # Reduced timeout
+          failureThreshold: 3
         
         # Increased resource allocation for faster startup
         resources:
