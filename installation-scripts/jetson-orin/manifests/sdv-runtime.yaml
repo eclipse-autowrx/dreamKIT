@@ -3,15 +3,8 @@ kind: Deployment
 metadata:
   name: sdv-runtime
   namespace: default
-  annotations:
-    deployment.kubernetes.io/revision: "1"
 spec:
   replicas: 1
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 0
   selector:
     matchLabels:
       app: sdv-runtime
@@ -19,233 +12,42 @@ spec:
     metadata:
       labels:
         app: sdv-runtime
-      annotations:
-        restart-timestamp: "{{ .Values.timestamp | default now }}"
-        pod.kubernetes.io/sandbox-cleanup: "force"
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: xip
       hostNetwork: true
       restartPolicy: Always
-      terminationGracePeriodSeconds: 30  # Reduced from 60 for faster cleanup
-      
-      tolerations:
-      - key: "node.kubernetes.io/unreachable"
-        operator: "Exists"
-        effect: "NoExecute"
-        tolerationSeconds: 300
-      - key: "node.kubernetes.io/not-ready"
-        operator: "Exists"
-        effect: "NoExecute"
-        tolerationSeconds: 300
-      - key: "node.kubernetes.io/network-unavailable"
-        operator: "Exists"
-        effect: "NoExecute"
-        tolerationSeconds: 300
-      - key: "node.kubernetes.io/disk-pressure"
-        operator: "Exists"
-        effect: "NoExecute"
-        tolerationSeconds: 300
-      
-      # Enhanced init container with sandbox cleanup awareness
-      initContainers:
-      - name: setup-vss
-        image: ${DOCKER_HUB_NAMESPACE}/sdv-runtime:dc1f218806aa00e1a99df23c7e2ed387b0c6da70
-        imagePullPolicy: IfNotPresent
-        command: ["/bin/sh"]
-        args:
-        - -c
-        - |
-          set -e
-          echo "Starting VSS initialization with sandbox cleanup awareness..."
-          
-          # Add delay to prevent rapid restart loops and allow cleanup
-          echo "Brief system stabilization..."
-          sleep 5
-          
-          echo "Initializing VSS file (offline mode)..."
-          mkdir -p /persistent /shared
-          
-          # Use separate directory runtime
-          if [ -f /persistent/vss.json ]; then
-            echo "Loading existing VSS file"
-            cp /persistent/vss.json /shared/vss.json &
-          elif [ -f /persistent/vss.json ]; then
-            echo "Copying default VSS file"
-            cp /persistent/vss.json /shared/vss.json &
-          fi
-          
-          wait  # Wait for background copy
-          chmod 666 /shared/vss.json
-          
-          # Minimal final check
-          sleep 2
-          echo "VSS initialization complete"
-        
-        resources:
-          requests:
-            memory: "32Mi"
-            cpu: "50m"
-          limits:
-            memory: "64Mi"
-            cpu: "200m"
-        
-        volumeMounts:
-        - name: persistent-storage
-          mountPath: /persistent
-        - name: shared-vss
-          mountPath: /shared
-      
+
       containers:
       - name: sdv-runtime
         image: ${DOCKER_HUB_NAMESPACE}/sdv-runtime:dc1f218806aa00e1a99df23c7e2ed387b0c6da70
         imagePullPolicy: IfNotPresent
-        
-        # No startup probe for TCP since we're not hosting on 55555
-        startupProbe:
-          exec:
-            command: ["/bin/sh", "-c", "pgrep -f 'sdv-runtime' || echo 'process check'"]
-          initialDelaySeconds: 20
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 15
-        
-        # Process-based readiness probe instead of TCP
-        readinessProbe:
-          exec:
-            command: ["/bin/sh", "-c", "pgrep -f 'sdv-runtime' && test -f /home/dev/ws/vss.json"]
-          initialDelaySeconds: 25
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
-        
-        # Process-based liveness probe
+
         livenessProbe:
-          exec:
-            command: ["/bin/sh", "-c", "pgrep -f 'sdv-runtime' || echo 'process check'"]
-          initialDelaySeconds: 35
-          periodSeconds: 15
-          timeoutSeconds: 5
-          failureThreshold: 3
-        
-        # Increased resource requests for faster startup
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "1000m"
-        
-        securityContext:
-          privileged: true
+          tcpSocket:
+            port: 55555
+          initialDelaySeconds: 30
+          periodSeconds: 30
+
+        readinessProbe:
+          tcpSocket:
+            port: 55555
+          initialDelaySeconds: 10
+          periodSeconds: 10
 
         env:
-        - name: RUNTIME_NAME
-          value: "${RUNTIME_NAME}"
-        
+        - name: OFFLINE_MODE
+          value: "true"
+
         ports:
         - containerPort: 55555
           hostPort: 55555
-        
-        volumeMounts:
-        - name: shared-vss
-          mountPath: /home/dev/ws/vss.json
-          subPath: vss.json
-      
-      - name: vss-sync
-        image: ghcr.io/eclipse-autowrx/sdv-runtime:dc1f218806aa00e1a99df23c7e2ed387b0c6da70
-        imagePullPolicy: IfNotPresent
-        
-        # Faster startup probe for vss-sync
-        startupProbe:
-          exec:
-            command: ["/bin/sh", "-c", "echo 'vss-sync startup'"]
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 2
-          failureThreshold: 6
-        
-        # Faster readiness probe
-        readinessProbe:
-          exec:
-            command: ["/bin/sh", "-c", "test -f /shared/vss.json"]
-          initialDelaySeconds: 15
-          periodSeconds: 5
-          timeoutSeconds: 2
-          failureThreshold: 3
-        
-        # Faster liveness probe
-        livenessProbe:
-          exec:
-            command: ["/bin/sh", "-c", "pgrep -f 'vss-sync' || echo 'process check'"]
-          initialDelaySeconds: 20
-          periodSeconds: 15
-          timeoutSeconds: 5
-          failureThreshold: 3
-        
-        command: ["/bin/sh"]
-        args:
-        - -c
-        - |
-          set -e
-          echo "Starting VSS sync service (offline mode)..."
-          
-          # Add startup delay for stability
-          sleep 3
-          
-          sync_file() {
-            if [ -f /shared/vss.json ]; then
-              if ! cmp -s /shared/vss.json /persistent/vss.json 2>/dev/null; then
-                echo "$(date): VSS file changed, syncing"
-                cp /shared/vss.json /persistent/vss.json
-                sync
-                echo "$(date): sync completed"
-              fi
-            fi
-          }
-          
-          # Initial sync with error handling
-          echo "Performing initial VSS sync..."
-          sync_file || echo "Initial sync failed, continuing..."
-          
-          # Continuous monitoring with optimized intervals
-          echo "Starting VSS monitoring (5s intervals)..."
-          while true; do
-            sync_file || echo "sync failed, continuing..."
-            sleep 5
-          done
-        
+
         volumeMounts:
         - name: persistent-storage
-          mountPath: /persistent
-        - name: shared-vss
-          mountPath: /shared
-        
-        # Slightly increased resources for faster sync operations
-        resources:
-          requests:
-            memory: "32Mi"
-            cpu: "50m"
-          limits:
-            memory: "64Mi"
-            cpu: "200m"
-      
+          mountPath: /home/dev/ws/vss.json
+          subPath: vss.json
+
       volumes:
       - name: persistent-storage
         hostPath:
           path: /home/${DK_USER}/.dk/sdv-runtime
           type: DirectoryOrCreate
-      - name: shared-vss
-        emptyDir: {}
----
-  apiVersion: v1
-  kind: Service
-  metadata:
-    name: sdv-runtime-service
-  spec:
-    selector:
-      app: sdv-runtime
-    ports:
-    - port: 55555
-      targetPort: 55555
