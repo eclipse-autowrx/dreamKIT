@@ -13,6 +13,8 @@ spec:
       labels:
         app: sdv-runtime
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: xip
       hostNetwork: true
       restartPolicy: Always
 
