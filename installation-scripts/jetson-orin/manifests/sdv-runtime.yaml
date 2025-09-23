@@ -23,6 +23,13 @@ spec:
         image: ${DOCKER_HUB_NAMESPACE}/sdv-runtime:dc1f218806aa00e1a99df23c7e2ed387b0c6da70
         imagePullPolicy: IfNotPresent
 
+        startupProbe:
+          tcpSocket:
+            port: 55555
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          failureThreshold: 30
+
         livenessProbe:
           tcpSocket:
             port: 55555
@@ -32,7 +39,7 @@ spec:
         readinessProbe:
           tcpSocket:
             port: 55555
-          initialDelaySeconds: 10
+          initialDelaySeconds: 0
           periodSeconds: 10
 
         env:
