@@ -44,7 +44,7 @@ fi
 # 1. Install k3s server (if not already installed)
 if ! command -v k3s &> /dev/null; then
     echo -e "${BLUE} ${ARROW} Installing K3s server...${NC}"
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-name=xip --advertise-address ${SERVER_IP} --tls-san ${SERVER_IP}" sh -
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-name=xip --advertise-address ${SERVER_IP} --tls-san ${SERVER_IP} --cluster-init --disable-cloud-controller --disable-network-policy" sh -
 else
     echo -e "${BLUE} ${ARROW} K3s server is already installed.${NC}"
 fi
@@ -65,9 +65,19 @@ write-kubeconfig-mode: "0644"
 disable-network-policy: true
 disable-cloud-controller: true
 flannel-backend: "host-gw"
+# Offline mode configurations
+cluster-init: true
+disable-helm-controller: true
+disable-kube-proxy: false
 kubelet-arg:
   - "max-pods=50"
   - "eviction-hard=memory.available<100Mi"
+  - "resolv-conf=/etc/resolv.conf"
+  - "cluster-dns=10.43.0.10"
+  - "fail-swap-on=false"
+kube-apiserver-arg:
+  - "default-not-ready-toleration-seconds=30"
+  - "default-unreachable-toleration-seconds=30"
 disable:
   - traefik
   - metrics-server
