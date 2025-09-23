@@ -29,6 +29,14 @@ echo "DOCKER_HUB_NAMESPACE: $DOCKER_HUB_NAMESPACE"
 
 k3s-killall.sh
 k3s-uninstall.sh
+scripts/k3s-uninstall.sh
+
+# Also remove the custom files created by the script
+sudo rm -rf /etc/systemd/system/k3s.service.d
+sudo rm -f /etc/systemd/system/k3s-network-prep.service
+sudo rm -f /usr/local/bin/k3s-network-prep.sh
+# Reload systemd
+sudo systemctl daemon-reload
 
 echo "Stopping all running containers..."
 docker kill $(docker ps -q)
