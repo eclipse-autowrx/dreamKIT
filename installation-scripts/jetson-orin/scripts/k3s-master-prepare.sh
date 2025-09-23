@@ -50,7 +50,7 @@ echo -e "${BLUE}Preparing K3s master on interface ${BOLD}${SERVER_NET_IF}${NC} w
 if ! command -v k3s &> /dev/null; then
     echo -e "${BLUE}Installing K3s server...${NC}"
     # Use INSTALL_K3S_EXEC to set the node name during the initial installation
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server" sh -
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-name=xip" sh -
 else
     echo -e "${GREEN}K3s server is already installed.${NC}"
 fi
@@ -67,8 +67,6 @@ sudo chown "$(id -u)":"$(id -g)" "$HOME/.kube/config"
 echo -e "${BLUE}Creating robust K3s configuration file at /etc/rancher/k3s/config.yaml...${NC}"
 sudo mkdir -p /etc/rancher/k3s
 sudo tee /etc/rancher/k3s/config.yaml << EOF
-# Set the master node name here
-node-name: xip
 write-kubeconfig-mode: "0644"
 
 # === NETWORKING: CRITICAL for multi-homed systems ===
