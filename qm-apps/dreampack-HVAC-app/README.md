@@ -91,7 +91,7 @@ Choose the deployment method that matches your environment:
 kubectl get pods | grep sdv-runtime
 
 # 2. Verify KUKSA databroker port accessibility
-telnet 192.168.56.48 55555
+telnet localhost 55555
 
 # 3. Check sdv-runtime container status
 kubectl logs -f sdv-runtime
@@ -110,7 +110,7 @@ kubectl logs -f sdv-runtime
 
    # Or run directly with custom KUKSA address
    docker run --rm --network=host \
-     -e KUKSA_ADDRESS=192.168.56.48 \
+     -e KUKSA_ADDRESS=localhost \
      dreampack-hvac-app:simple-databroker
    ```
 
@@ -120,7 +120,7 @@ kubectl logs -f sdv-runtime
    cp .env.example .env
 
    # Edit with your settings
-   # KUKSA_ADDRESS=192.168.56.48
+   # KUKSA_ADDRESS=localhost
    # KUKSA_PORT=55555
    # LOG_LEVEL=INFO
    ```
@@ -132,7 +132,7 @@ kubectl logs -f sdv-runtime
 pip install -r requirements.txt
 
 # Set environment (optional)
-export KUKSA_ADDRESS=192.168.56.48
+export KUKSA_ADDRESS=localhost
 
 # Run the app
 python src/main.py
@@ -200,7 +200,7 @@ Connect to sdv-runtime (dreamOS) to verify signal updates:
 pip install kuksa-client
 
 # Connect to dreamOS sdv-runtime
-kuksa-client grpc://192.168.56.48:55555
+kuksa-client grpc://localhost:55555
 
 # Check current values
 get Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed
@@ -240,7 +240,7 @@ docker pull ghcr.io/eclipse-autowrx/dk_app_dreampack_hvac:latest
   "Platform": "linux/arm64",
   "DockerImageURL": "ghcr.io/eclipse-autowrx/dk_app_dreampack_hvac:latest",
   "RuntimeCfg": {
-    "KUKSA_ADDRESS": "192.168.56.48"
+    "KUKSA_ADDRESS": "localhost"
   }
 }
 ```
@@ -260,14 +260,14 @@ docker pull ghcr.io/eclipse-autowrx/dk_app_dreampack_hvac:latest
 #### 1. sdv-runtime Connection Failed
 ```bash
 # Check sdv-runtime connectivity
-telnet 192.168.56.48 55555
+telnet localhost 55555
 
 # Verify sdv-runtime container is running in dreamOS
 kubectl get pods | grep sdv-runtime
 kubectl logs sdv-runtime
 
 # Health check from container
-docker exec dreampack-hvac-app python -c "import socket; s=socket.socket(); s.settimeout(5); print('OK' if s.connect_ex(('192.168.56.48', 55555)) == 0 else 'FAIL'); s.close()"
+docker exec dreampack-hvac-app python -c "import socket; s=socket.socket(); s.settimeout(5); print('OK' if s.connect_ex(('localhost', 55555)) == 0 else 'FAIL'); s.close()"
 ```
 
 #### 2. Container Build Issues
