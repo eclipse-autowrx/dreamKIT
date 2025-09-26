@@ -848,7 +848,7 @@ main() {
     # Step 8   K3s-based installation
     ###############################################################################
     show_step 8 "K3s-based installation" "k3s master installation & preparation for local registry"
-    sudo scripts/k3s-master-prepare.sh eth0
+    sudo DK_USER="$DK_USER" scripts/k3s-master-prepare.sh eth0
     if [ $? -ne 0 ]; then
         show_error "Failed to prepare K3s master. Please check the logs."
         exit 1
