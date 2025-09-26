@@ -51,6 +51,12 @@ spec:
           failureThreshold: 3
 
         env:
+        - name: USER
+          value: "${DK_USER}"
+        - name: RUNTIME_NAME
+          value: "${RUNTIME_NAME}"
+        - name: ARCH
+          value: "${ARCH}"
         - name: OFFLINE_MODE
           value: "true"
 
