@@ -7,13 +7,15 @@
 #
 # SPDX-License-Identifier: MIT
 
-# K3s Master Setup & Agent Package Preparation - JETSON ORIN FIX
+# K3s Master Setup & Agent Package Preparation - Generic Device Support
 # Usage:
-#   sudo ./k3s-master-prepare.sh <network_interface>
+#   ./k3s-master-prepare.sh <network_interface>     # Auto-detects user
+#   sudo ./k3s-master-prepare.sh <network_interface> # Auto-detects original user
 #   sudo DK_USER="username" ./k3s-master-prepare.sh <network_interface>
 # Examples:
+#   ./k3s-master-prepare.sh eth0
 #   sudo ./k3s-master-prepare.sh eth0
-#   sudo DK_USER="sdv-orin" ./k3s-master-prepare.sh eth0
+#   sudo DK_USER="myuser" ./k3s-master-prepare.sh eth0
 
 # Colors and formatting
 RED='\033[0;31m'
@@ -33,7 +35,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 show_summary() {
     local node_token="$1"
     echo ""
-    echo -e "${GREEN}${BOLD}✓✓✓ K3s Master Setup Complete for Jetson Orin! ✓✓✓${NC}"
+    echo -e "${GREEN}${BOLD}✓✓✓ K3s Master Setup Complete! ✓✓✓${NC}"
     echo -e "${CYAN}--------------------------------------------------${NC}"
     echo -e "${WHITE}Master Node Name:  ${BOLD}xip${NC}"
     echo -e "${WHITE}Master IP:         ${BOLD}${SERVER_IP}${NC}"
@@ -44,9 +46,31 @@ show_summary() {
 }
 
 # --- SCRIPT SETUP AND VALIDATION ---
-if [ "$EUID" -ne 0 ]; then
-    echo -e "${YELLOW}${BOLD}This script must be run as root (sudo).${NC}"
-    exit 1
+# Auto-detect user if running directly (not via sudo)
+if [ "$EUID" -eq 0 ] && [ -z "$SUDO_USER" ] && [ -z "$DK_USER" ]; then
+    echo -e "${YELLOW}${BOLD}Warning: Running directly as root. Consider running as regular user or via sudo.${NC}"
+fi
+
+# Auto-detect the target user for kubeconfig setup
+if [ -z "$DK_USER" ]; then
+    if [ -n "$SUDO_USER" ]; then
+        DK_USER="$SUDO_USER"
+        echo -e "${BLUE}Auto-detected user from sudo: $DK_USER${NC}"
+    elif [ "$EUID" -ne 0 ]; then
+        DK_USER="$(whoami)"
+        echo -e "${BLUE}Auto-detected current user: $DK_USER${NC}"
+        # If not root, we need to escalate for certain operations
+        if ! sudo -n true 2>/dev/null; then
+            echo -e "${YELLOW}This script requires sudo privileges for system configuration.${NC}"
+            echo -e "${YELLOW}Please run with sudo or ensure passwordless sudo is configured.${NC}"
+            exit 1
+        fi
+    else
+        DK_USER="root"
+        echo -e "${BLUE}Running as root user${NC}"
+    fi
+else
+    echo -e "${BLUE}Using explicitly provided user: $DK_USER${NC}"
 fi
 
 if [ $# -ne 1 ]; then
@@ -64,8 +88,9 @@ if [ -z "$SERVER_IP" ]; then
 fi
 
 echo -e "${BLUE}Preparing K3s master on interface ${BOLD}${SERVER_NET_IF}${NC} with IP ${BOLD}${SERVER_IP}${NC}"
+echo -e "${BLUE}Target user for kubeconfig: ${BOLD}${DK_USER}${NC}"
 
-# --- 0. JETSON ORIN SPECIFIC CLEANUP ---
+# --- 0. DEVICE SPECIFIC CLEANUP ---
 # echo -e "${BLUE}Cleaning up any previous K3s installation...${NC}"
 # if [ -f /usr/local/bin/k3s-uninstall.sh ]; then
 #     /usr/local/bin/k3s-uninstall.sh || true
@@ -75,13 +100,13 @@ echo -e "${BLUE}Preparing K3s master on interface ${BOLD}${SERVER_NET_IF}${NC} w
 # pkill -f k3s || true
 # sleep 2
 
-# Clean up existing bridge interfaces that might conflict
+# Clean up existing bridge interfaces that might conflict (ARM/x86 compatible)
 ip link delete cni0 2>/dev/null || true
 ip link delete flannel.1 2>/dev/null || true
 
-# --- 1. K3S INSTALLATION WITH JETSON SPECIFIC CONFIG ---
+# --- 1. K3S INSTALLATION WITH DEVICE SPECIFIC CONFIG ---
 if ! command -v k3s &> /dev/null; then
-    echo -e "${BLUE}Installing K3s server with Jetson Orin specific configuration...${NC}"
+    echo -e "${BLUE}Installing K3s server with device-specific configuration...${NC}"
 
     # Create the K3s configuration directory first
     mkdir -p /etc/rancher/k3s
@@ -90,14 +115,14 @@ if ! command -v k3s &> /dev/null; then
     cat > /etc/rancher/k3s/config.yaml << EOF
 write-kubeconfig-mode: "0644"
 
-# === CRITICAL: Network configuration for Jetson Orin ===
+# === CRITICAL: Network configuration for multi-arch devices ===
 advertise-address: "${SERVER_IP}"
 node-ip: "${SERVER_IP}"
 flannel-iface: "${SERVER_NET_IF}"
 cluster-cidr: "10.42.0.0/16"
 service-cidr: "10.43.0.0/16"
 
-# Disable components that cause issues on Jetson
+# Disable components that cause issues on embedded devices
 disable-network-policy: true
 disable-cloud-controller: true
 flannel-backend: "host-gw"
@@ -107,7 +132,7 @@ cluster-init: true
 disable-helm-controller: true
 prefer-bundled-bin: true
 
-# Jetson Orin specific kubelet arguments
+# Device-specific kubelet arguments
 kubelet-arg:
   - "max-pods=50"
   - "eviction-hard=memory.available<100Mi"
@@ -148,8 +173,8 @@ else
     exit 0
 fi
 
-# --- 2. JETSON SPECIFIC SYSTEM CONFIGURATION ---
-echo -e "${BLUE}Configuring system for Jetson Orin...${NC}"
+# --- 2. DEVICE SPECIFIC SYSTEM CONFIGURATION ---
+echo -e "${BLUE}Configuring system for embedded device...${NC}"
 
 # Ensure proper kernel modules are loaded
 modprobe br_netfilter || true
@@ -159,13 +184,13 @@ modprobe overlay || true
 echo 'br_netfilter' >> /etc/modules-load.d/k3s.conf
 echo 'overlay' >> /etc/modules-load.d/k3s.conf
 
-# --- 4. SYSTEMD CONFIGURATION FOR JETSON ---
-echo -e "${BLUE}Creating Jetson-specific systemd configuration...${NC}"
+# --- 4. SYSTEMD CONFIGURATION FOR DEVICE ---
+echo -e "${BLUE}Creating device-specific systemd configuration...${NC}"
 
 # Create network wait script that waits for the specific interface and IP
 tee /usr/local/bin/k3s-network-wait.sh << EOF
 #!/bin/bash
-# Jetson Orin K3s network wait script
+# K3s network wait script for embedded devices
 set -e
 
 INTERFACE="${SERVER_NET_IF}"
@@ -226,13 +251,13 @@ Restart=always
 RestartSec=15s
 StartLimitInterval=0
 
-# Jetson-specific environment
+# Device-specific environment
 Environment="K3S_NODE_NAME=xip"
 Environment="K3S_ADVERTISE_ADDRESS=${SERVER_IP}"
 EOF
 
 # --- 5. START SERVICES ---
-echo -e "${BLUE}Starting K3s with Jetson configuration...${NC}"
+echo -e "${BLUE}Starting K3s with device configuration...${NC}"
 systemctl daemon-reload
 systemctl stop k3s || true
 systemctl start k3s
@@ -335,20 +360,25 @@ configs:
       insecure_skip_verify: true
 EOF
 
+# Update dreamos_setup.sh with current date
+CURRENT_DATE=$(date "+%Y-%m-%d %H:%M:%S")
+echo -e "${BLUE}Updating dreamos_setup.sh with current date: ${CURRENT_DATE}${NC}"
+
+if [ -f "${PACKAGE_DIR}/dreamos_setup.sh" ]; then
+    # Update the date line in dreamos_setup.sh
+    sed -i "s/date -s \".*\"/date -s \"${CURRENT_DATE}\"/" "${PACKAGE_DIR}/dreamos_setup.sh"
+    echo -e "${GREEN}✓ Updated dreamos_setup.sh date to current time${NC}"
+else
+    echo -e "${YELLOW}⚠ dreamos_setup.sh not found in ${PACKAGE_DIR}, skipping date update${NC}"
+fi
+
 echo -e "${GREEN}✓ Agent package artifacts created in ${PACKAGE_DIR}/${NC}"
 
 # --- 3. KUBECONFIG PERMISSIONS ---
 echo -e "${BLUE}Configuring kubectl access...${NC}"
 
-# Determine the original user (simplified logic)
-# Priority: 1) Explicitly passed DK_USER, 2) SUDO_USER, 3) root
-if [ -n "$DK_USER" ]; then
-    ORIGINAL_USER="$DK_USER"
-elif [ -n "$SUDO_USER" ]; then
-    ORIGINAL_USER="$SUDO_USER"
-else
-    ORIGINAL_USER="root"
-fi
+# Use the auto-detected user from earlier in the script
+ORIGINAL_USER="$DK_USER"
 
 ORIGINAL_HOME=$(eval echo ~$ORIGINAL_USER)
 
@@ -402,16 +432,18 @@ fi
 
 # --- 8. FINAL SUMMARY ---
 show_summary "$NODE_TOKEN"
-echo -e "${YELLOW}Jetson Orin Specific Fixes Applied:${NC}"
+echo -e "${YELLOW}Device-Specific Fixes Applied:${NC}"
 echo -e "${YELLOW}- Force IP binding to prevent multi-homed issues${NC}"
-echo -e "${YELLOW}- Kernel module loading for ARM64 architecture${NC}"
+echo -e "${YELLOW}- Kernel module loading for multi-arch support${NC}"
 echo -e "${YELLOW}- Network interface cleanup and preparation${NC}"
 echo -e "${YELLOW}- Network wait script for interface availability${NC}"
-echo -e "${YELLOW}- Extended timeouts for Jetson hardware${NC}"
+echo -e "${YELLOW}- Extended timeouts for embedded hardware${NC}"
 echo -e "${YELLOW}- Kubeconfig permissions configured for user access${NC}"
 echo ""
 echo -e "${CYAN}${BOLD}Post-Installation Notes:${NC}"
 echo -e "${CYAN}• kubectl and k9s should work immediately for user $ORIGINAL_USER${NC}"
 echo -e "${CYAN}• Both /etc/rancher/k3s/k3s.yaml and ~/.kube/config are configured${NC}"
+echo -e "${CYAN}• Script supports auto-detection when run standalone or via sudo${NC}"
+echo -e "${CYAN}• For custom user: sudo DK_USER=\"username\" $0 <interface>${NC}"
 echo -e "${CYAN}• If issues persist, verify file permissions and ownership${NC}"
 echo ""

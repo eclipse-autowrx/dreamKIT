@@ -31,4 +31,4 @@ ip route add default via 192.168.56.48 dev eth0
 
 # Configure K3S - CA
 timedatectl set-ntp true
-date -s "2025-09-09 18:00:00"
+date -s "2025-09-29 13:15:57"
