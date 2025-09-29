@@ -38,8 +38,16 @@ show_summary() {
     echo -e "${GREEN}${BOLD}✓✓✓ K3s Master Setup Complete! ✓✓✓${NC}"
     echo -e "${CYAN}--------------------------------------------------${NC}"
     echo -e "${WHITE}Master Node Name:  ${BOLD}xip${NC}"
-    echo -e "${WHITE}Master IP:         ${BOLD}${SERVER_IP}${NC}"
-    echo -e "${WHITE}Network Interface: ${BOLD}${SERVER_NET_IF}${NC}"
+
+    if [ "$SKIP_WORKER_ARTIFACTS" = "true" ]; then
+        echo -e "${WHITE}Master Mode:       ${BOLD}Standalone (no worker artifacts)${NC}"
+        echo -e "${WHITE}Network Interface: ${BOLD}${SERVER_NET_IF} (not available)${NC}"
+    else
+        echo -e "${WHITE}Master IP:         ${BOLD}${SERVER_IP}${NC}"
+        echo -e "${WHITE}Network Interface: ${BOLD}${SERVER_NET_IF}${NC}"
+        echo -e "${WHITE}Worker Artifacts:  ${BOLD}Generated in ../nxp-s32g/scripts/${NC}"
+    fi
+
     echo -e "${WHITE}Agent Node Token:  (see below)${NC}"
     echo -e "${BOLD}${node_token}${NC}"
     echo -e "${CYAN}--------------------------------------------------${NC}"
@@ -81,14 +89,25 @@ fi
 
 SERVER_NET_IF="$1"
 
-SERVER_IP=$(ip -4 addr show "$SERVER_NET_IF" | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
+SERVER_IP=$(ip -4 addr show "$SERVER_NET_IF" 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
 if [ -z "$SERVER_IP" ]; then
-    echo -e "${RED}${BOLD}Could not find an IP address on interface '$SERVER_NET_IF'. Please check the interface name.${NC}"
-    exit 1
-fi
+    echo -e "${YELLOW}${BOLD}Warning: Could not find an IP address on interface '$SERVER_NET_IF'.${NC}"
+    echo -e "${YELLOW}This could mean the interface doesn't exist or has no IP assigned.${NC}"
+    echo -e "${YELLOW}Proceeding with K3s master-only installation (node name: xip).${NC}"
+    echo -e "${YELLOW}Worker node artifact generation will be skipped.${NC}"
 
-echo -e "${BLUE}Preparing K3s master on interface ${BOLD}${SERVER_NET_IF}${NC} with IP ${BOLD}${SERVER_IP}${NC}"
-echo -e "${BLUE}Target user for kubeconfig: ${BOLD}${DK_USER}${NC}"
+    # Set flag to skip worker node preparation
+    SKIP_WORKER_ARTIFACTS=true
+
+    echo -e "${BLUE}Preparing K3s master-only installation${NC}"
+    echo -e "${BLUE}Target user for kubeconfig: ${BOLD}${DK_USER}${NC}"
+else
+    echo -e "${BLUE}Preparing K3s master on interface ${BOLD}${SERVER_NET_IF}${NC} with IP ${BOLD}${SERVER_IP}${NC}"
+    echo -e "${BLUE}Target user for kubeconfig: ${BOLD}${DK_USER}${NC}"
+
+    # Clear flag for normal operation
+    SKIP_WORKER_ARTIFACTS=false
+fi
 
 # --- 0. DEVICE SPECIFIC CLEANUP ---
 # echo -e "${BLUE}Cleaning up any previous K3s installation...${NC}"
@@ -112,7 +131,55 @@ if ! command -v k3s &> /dev/null; then
     mkdir -p /etc/rancher/k3s
 
     # Create the configuration file BEFORE installation to avoid conflicts
-    cat > /etc/rancher/k3s/config.yaml << EOF
+    if [ "$SKIP_WORKER_ARTIFACTS" = "true" ]; then
+        # Master-only configuration without specific network interface binding
+        cat > /etc/rancher/k3s/config.yaml << EOF
+write-kubeconfig-mode: "0644"
+
+# === Master-only configuration ===
+cluster-cidr: "10.42.0.0/16"
+service-cidr: "10.43.0.0/16"
+
+# Disable components that cause issues on embedded devices
+disable-network-policy: true
+disable-cloud-controller: true
+flannel-backend: "host-gw"
+
+# Single node cluster setup
+cluster-init: true
+disable-helm-controller: true
+prefer-bundled-bin: true
+
+# Device-specific kubelet arguments
+kubelet-arg:
+  - "max-pods=50"
+  - "eviction-hard=memory.available<100Mi"
+  - "resolv-conf=/etc/resolv.conf"
+  - "fail-swap-on=false"
+  - "address=0.0.0.0"
+
+# API server configuration
+kube-apiserver-arg:
+  - "default-not-ready-toleration-seconds=30"
+  - "default-unreachable-toleration-seconds=30"
+  - "service-cluster-ip-range=10.43.0.0/16"
+  - "bind-address=0.0.0.0"
+
+kube-controller-manager-arg:
+  - "bind-address=0.0.0.0"
+  - "node-monitor-grace-period=30s"
+  - "node-monitor-period=5s"
+
+# Disable problematic components
+disable:
+  - traefik
+  - metrics-server
+  - local-storage
+  - servicelb
+EOF
+    else
+        # Normal configuration with network interface binding
+        cat > /etc/rancher/k3s/config.yaml << EOF
 write-kubeconfig-mode: "0644"
 
 # === CRITICAL: Network configuration for multi-arch devices ===
@@ -161,6 +228,7 @@ disable:
   - local-storage
   - servicelb
 EOF
+    fi
 
     # Install K3s with specific configuration for Jetson
     curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-name=xip --config /etc/rancher/k3s/config.yaml" sh -
@@ -188,7 +256,32 @@ echo 'overlay' >> /etc/modules-load.d/k3s.conf
 echo -e "${BLUE}Creating device-specific systemd configuration...${NC}"
 
 # Create network wait script that waits for the specific interface and IP
-tee /usr/local/bin/k3s-network-wait.sh << EOF
+if [ "$SKIP_WORKER_ARTIFACTS" = "true" ]; then
+    # Simplified network wait script for master-only mode
+    tee /usr/local/bin/k3s-network-wait.sh << EOF
+#!/bin/bash
+# K3s network wait script for master-only embedded devices
+set -e
+
+echo "Master-only mode: Ensuring basic network readiness..."
+
+# Ensure loopback is up
+ip link set dev lo up
+
+# Clean up any conflicting bridge interfaces
+ip link delete cni0 2>/dev/null || true
+ip link delete flannel.1 2>/dev/null || true
+
+# Ensure kernel modules are loaded
+modprobe br_netfilter || true
+modprobe overlay || true
+
+echo "Network preparation complete for master-only installation"
+exit 0
+EOF
+else
+    # Full network wait script for normal operation
+    tee /usr/local/bin/k3s-network-wait.sh << EOF
 #!/bin/bash
 # K3s network wait script for embedded devices
 set -e
@@ -231,13 +324,35 @@ done
 echo "ERROR: Network interface \$INTERFACE with IP \$EXPECTED_IP not ready after \$MAX_WAIT seconds"
 exit 1
 EOF
+fi
 chmod +x /usr/local/bin/k3s-network-wait.sh
 
 # Note: Instead of creating a separate service, we'll use ExecStartPre in the override
 
 # Create systemd override for k3s service
 mkdir -p /etc/systemd/system/k3s.service.d
-tee /etc/systemd/system/k3s.service.d/override.conf << EOF
+if [ "$SKIP_WORKER_ARTIFACTS" = "true" ]; then
+    # Master-only systemd configuration
+    tee /etc/systemd/system/k3s.service.d/override.conf << EOF
+[Unit]
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Network preparation and wait before k3s starts
+ExecStartPre=/usr/local/bin/k3s-network-wait.sh
+Environment="K3S_RESOLV_CONF=/etc/resolv.conf"
+TimeoutStartSec=600
+Restart=always
+RestartSec=15s
+StartLimitInterval=0
+
+# Device-specific environment
+Environment="K3S_NODE_NAME=xip"
+EOF
+else
+    # Normal systemd configuration with network binding
+    tee /etc/systemd/system/k3s.service.d/override.conf << EOF
 [Unit]
 After=network-online.target
 Wants=network-online.target
@@ -255,6 +370,7 @@ StartLimitInterval=0
 Environment="K3S_NODE_NAME=xip"
 Environment="K3S_ADVERTISE_ADDRESS=${SERVER_IP}"
 EOF
+fi
 
 # --- 5. START SERVICES ---
 echo -e "${BLUE}Starting K3s with device configuration...${NC}"
@@ -281,26 +397,32 @@ if ! k3s kubectl get nodes --no-headers 2>/dev/null | grep -q Ready; then
 fi
 
 # --- 7. PREPARE AGENT INSTALLATION PACKAGE ---
-echo -e "${BLUE}Preparing agent installation package...${NC}"
+if [ "$SKIP_WORKER_ARTIFACTS" = "true" ]; then
+    echo -e "${YELLOW}Skipping worker node artifact generation (network interface not available)${NC}"
 
-# Download K3s binaries for both amd64 and arm64 (for NXP agent preparation)
-k3s kubectl delete -f manifests/k3s-rancher-mirrored-pause-mirror.yaml --ignore-not-found || true
-k3s kubectl apply -f manifests/k3s-rancher-mirrored-pause-mirror.yaml || true
+    # Extract node token for display in summary
+    NODE_TOKEN=$(cat /var/lib/rancher/k3s/server/node-token)
+else
+    echo -e "${BLUE}Preparing agent installation package...${NC}"
 
-# Extract node token
-NODE_TOKEN=$(cat /var/lib/rancher/k3s/server/node-token)
+    # Download K3s binaries for both amd64 and arm64 (for NXP agent preparation)
+    k3s kubectl delete -f manifests/k3s-rancher-mirrored-pause-mirror.yaml --ignore-not-found || true
+    k3s kubectl apply -f manifests/k3s-rancher-mirrored-pause-mirror.yaml || true
 
-# Agent configuration (adjust these placeholders for the target worker)
-WORKER_NODE_IP="192.168.56.49"
-WORKER_NODE_NET_IF="eth0"
+    # Extract node token
+    NODE_TOKEN=$(cat /var/lib/rancher/k3s/server/node-token)
 
-echo -e "${CYAN}Agent package will be configured for worker node:${NC}"
-echo -e "${CYAN}  - IP: ${WORKER_NODE_IP}${NC}"
-echo -e "${CYAN}  - Interface: ${WORKER_NODE_NET_IF}${NC}"
+    # Agent configuration (adjust these placeholders for the target worker)
+    WORKER_NODE_IP="192.168.56.49"
+    WORKER_NODE_NET_IF="eth0"
 
-# Create directories for the package artifacts
-PACKAGE_DIR="../nxp-s32g/scripts"
-mkdir -p "$PACKAGE_DIR"
+    echo -e "${CYAN}Agent package will be configured for worker node:${NC}"
+    echo -e "${CYAN}  - IP: ${WORKER_NODE_IP}${NC}"
+    echo -e "${CYAN}  - Interface: ${WORKER_NODE_NET_IF}${NC}"
+
+    # Create directories for the package artifacts
+    PACKAGE_DIR="../nxp-s32g/scripts"
+    mkdir -p "$PACKAGE_DIR"
 
 # Prepare agent k3s.service template
 cat <<EOF > "${PACKAGE_DIR}/k3s.service"
@@ -342,8 +464,8 @@ ExecStart=/usr/local/bin/k3s agent \\
 ExecStopPost=/bin/sh -c "if systemctl is-system-running | grep -i 'stopping'; then /usr/local/bin/k3s-killall.sh; fi"
 EOF
 
-# Prepare containerd mirror configuration
-REGISTRY_MIRROR_IP="192.168.56.48"
+# Prepare containerd mirror configuration - use detected master IP as registry mirror
+REGISTRY_MIRROR_IP="$SERVER_IP"
 cat >"${PACKAGE_DIR}/registries.yaml" <<EOF
 # This file is generated by k3s-master-prepare.sh
 # It should be placed in /etc/rancher/k3s/ on the worker node.
@@ -360,6 +482,34 @@ configs:
       insecure_skip_verify: true
 EOF
 
+# Prepare daemon.json for containerd registry mirror
+cat >"${PACKAGE_DIR}/daemon.json" <<EOF
+{
+  "insecure-registries": ["${REGISTRY_MIRROR_IP}:5000"]
+}
+EOF
+
+# Prepare dreamos-setup.service for systemd
+cat >"${PACKAGE_DIR}/dreamos-setup.service" <<EOF
+# This file is generated by k3s-master-prepare.sh
+# It should be placed in /etc/systemd/system/ on the worker node.
+[Unit]
+Description=DreamOS Setup Service
+After=network.target
+Before=k3s.service
+Wants=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/root/.dk/nxp-s32g/scripts/dreamos_setup.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # Update dreamos_setup.sh with current date
 CURRENT_DATE=$(date "+%Y-%m-%d %H:%M:%S")
 echo -e "${BLUE}Updating dreamos_setup.sh with current date: ${CURRENT_DATE}${NC}"
@@ -367,12 +517,63 @@ echo -e "${BLUE}Updating dreamos_setup.sh with current date: ${CURRENT_DATE}${NC
 if [ -f "${PACKAGE_DIR}/dreamos_setup.sh" ]; then
     # Update the date line in dreamos_setup.sh
     sed -i "s/date -s \".*\"/date -s \"${CURRENT_DATE}\"/" "${PACKAGE_DIR}/dreamos_setup.sh"
-    echo -e "${GREEN}✓ Updated dreamos_setup.sh date to current time${NC}"
+    # Update the default gateway to use the detected master IP
+    sed -i "s/ip route add default via .* dev eth0/ip route add default via ${SERVER_IP} dev eth0/" "${PACKAGE_DIR}/dreamos_setup.sh"
+    echo -e "${GREEN}✓ Updated dreamos_setup.sh date and gateway configuration${NC}"
 else
-    echo -e "${YELLOW}⚠ dreamos_setup.sh not found in ${PACKAGE_DIR}, skipping date update${NC}"
+    echo -e "${YELLOW}⚠ dreamos_setup.sh not found in ${PACKAGE_DIR}, creating new one${NC}"
+    # Create a basic dreamos_setup.sh if it doesn't exist
+    cat >"${PACKAGE_DIR}/dreamos_setup.sh" <<EOF
+#!/bin/bash
+# Copyright (c) 2025 Eclipse Foundation.
+#
+# This program and the accompanying materials are made available under the
+# terms of the MIT License which is available at
+# https://opensource.org/licenses/MIT.
+#
+# SPDX-License-Identifier: MIT
+
+set -e
+
+# Configure CAN0
+ip link set can0 type can bitrate 500000 sample-point 0.7 dbitrate 2000000 fd on
+ip link set can0 up
+ifconfig can0 txqueuelen 65536
+
+# Configure CAN1
+#ip link set can1 type can bitrate 500000
+ip link set can1 type can bitrate 500000 sample-point 0.75 dbitrate 2000000 fd on
+ip link set can1 up
+ifconfig can1 txqueuelen 65536
+
+# Configure CanTP
+insmod /home/root/.dk/nxp-s32g/library/can-isotp-s32g-ewaol.ko
+
+# Configure IPv4 - K3S
+ifconfig eth0 ${WORKER_NODE_IP}
+
+# Configure K3S - default gateway
+ip route add default via ${SERVER_IP} dev eth0
+
+# Configure K3S - CA
+timedatectl set-ntp true
+date -s "${CURRENT_DATE}"
+EOF
+    chmod +x "${PACKAGE_DIR}/dreamos_setup.sh"
 fi
 
-echo -e "${GREEN}✓ Agent package artifacts created in ${PACKAGE_DIR}/${NC}"
+    echo -e "${GREEN}✓ Agent package artifacts created in ${PACKAGE_DIR}/:${NC}"
+    echo -e "${GREEN}  - k3s.service (systemd service file for K3s agent)${NC}"
+    echo -e "${GREEN}  - dreamos-setup.service (systemd service file for DreamOS setup)${NC}"
+    echo -e "${GREEN}  - registries.yaml (K3s registry mirror config)${NC}"
+    echo -e "${GREEN}  - daemon.json (containerd registry mirror config)${NC}"
+    echo -e "${GREEN}  - dreamos_setup.sh (network and system setup script)${NC}"
+
+    # Set execute permissions for all shell scripts in the package directory
+    echo -e "${BLUE}Setting execute permissions for shell scripts...${NC}"
+    chmod +x "${PACKAGE_DIR}"/*.sh 2>/dev/null || true
+    echo -e "${GREEN}✓ Execute permissions set for all .sh files in ${PACKAGE_DIR}${NC}"
+fi
 
 # --- 3. KUBECONFIG PERMISSIONS ---
 echo -e "${BLUE}Configuring kubectl access...${NC}"
@@ -433,7 +634,13 @@ fi
 # --- 8. FINAL SUMMARY ---
 show_summary "$NODE_TOKEN"
 echo -e "${YELLOW}Device-Specific Fixes Applied:${NC}"
-echo -e "${YELLOW}- Force IP binding to prevent multi-homed issues${NC}"
+if [ "$SKIP_WORKER_ARTIFACTS" = "true" ]; then
+    echo -e "${YELLOW}- Master-only configuration (no network interface binding)${NC}"
+    echo -e "${YELLOW}- Basic network preparation for standalone operation${NC}"
+else
+    echo -e "${YELLOW}- Force IP binding to prevent multi-homed issues${NC}"
+    echo -e "${YELLOW}- Network interface-specific configuration${NC}"
+fi
 echo -e "${YELLOW}- Kernel module loading for multi-arch support${NC}"
 echo -e "${YELLOW}- Network interface cleanup and preparation${NC}"
 echo -e "${YELLOW}- Network wait script for interface availability${NC}"
