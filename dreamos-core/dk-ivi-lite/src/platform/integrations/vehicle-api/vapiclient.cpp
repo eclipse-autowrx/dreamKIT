@@ -50,6 +50,18 @@ bool VAPIClient::connectToServer(const std::string &serverURI,
   catch (const std::exception &e) {
     std::cerr << "[VAPIClient] Failed to connect to "
               << serverURI << ": " << e.what() << "\n";
+
+    // Create client entry for future reconnection attempts
+    try {
+      auto client = std::make_unique<KuksaClient::KuksaClient>(cfg);
+      ClientEntry entry;
+      entry.client = std::move(client);
+      mClients_.try_emplace(serverURI, std::move(entry));
+      std::cout << "[VAPIClient] Created client entry for future reconnection to " << serverURI << "\n";
+    } catch (const std::exception &e2) {
+      std::cerr << "[VAPIClient] Failed to create client entry: " << e2.what() << "\n";
+    }
+
     return false;
   }
 }

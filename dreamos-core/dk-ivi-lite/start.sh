@@ -85,10 +85,12 @@ detect_environment() {
 
     # Set other environment variables
     export DKCODE="dreamKIT"
-    export DOCKER_HUB_NAMESPACE="ghcr.io/eclipse-autowrx"
+    # export DOCKER_HUB_NAMESPACE="ghcr.io/eclipse-autowrx"
+    export DOCKER_HUB_NAMESPACE="docker.io/library"
     export DK_CONTAINER_ROOT="/app/.dk/"
     export DK_VIP=""
     export DISPLAY="${DISPLAY:-:0}"
+    export XDG_RUNTIME_DIR=$(sudo -u "$DK_USER" env | grep XDG_RUNTIME_DIR | cut -d= -f2)
 
     show_info "Environment variables set:"
     show_info "  DK_USER: $DK_USER"
@@ -96,6 +98,7 @@ detect_environment() {
     show_info "  ARCH: $ARCH"
     show_info "  DOCKER_HUB_NAMESPACE: $DOCKER_HUB_NAMESPACE"
     show_info "  DISPLAY: $DISPLAY"
+    show_info "  XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR"
 }
 
 # Apply manifest with environment variable substitution

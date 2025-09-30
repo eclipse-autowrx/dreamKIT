@@ -43,7 +43,7 @@ ControlsAsync::ControlsAsync()
 
     // Initialize connection monitoring
     connectionMonitorTimer = new QTimer(this);
-    connectionMonitorTimer->setInterval(2000); // Check every 2 seconds
+    connectionMonitorTimer->setInterval(5000); // Check every 5 seconds
     connect(connectionMonitorTimer, &QTimer::timeout, this, &ControlsAsync::checkConnectionState);
 
     reconnectionTimer = new QTimer(this);
@@ -78,7 +78,7 @@ ControlsAsync::ControlsAsync()
         qCritical() << "Could not connect to VAPI server:" << DK_VAPI_DATABROKER;
         lastKnownConnectionState = false;
         emit connectionError(QString("Failed to connect to VAPI server: %1").arg(DK_VAPI_DATABROKER));
-        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        NOTIFY_ERROR("sdv-runtime", "Connection is not stable. User can restart via k9s (Ctrl + D > OK)");
         // Start monitoring for reconnection
         reconnectionTimer->start(5000); // Try to enable auto-reconnect after 5 seconds
         return;
@@ -249,7 +249,7 @@ void ControlsAsync::qml_setApi_lightCtr_LowBeam(bool sts)
     if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
         qWarning() << "Cannot set LowBeam: VAPI client not connected";
         emit connectionError("Cannot set vehicle data: not connected to server");
-        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        NOTIFY_ERROR("sdv-runtime", "Connection is not stable. User can restart via k9s (Ctrl + D > OK)");
         return;
     }
 
@@ -279,6 +279,7 @@ void ControlsAsync::qml_setApi_lightCtr_HighBeam(bool sts)
     if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
         qWarning() << "Cannot set HighBeam: VAPI client not connected";
         emit connectionError("Cannot set vehicle data: not connected to server");
+        NOTIFY_ERROR("sdv-runtime", "Connection is not stable. User can restart via k9s (Ctrl + D > OK)");
         return;
     }
 
@@ -305,7 +306,7 @@ void ControlsAsync::qml_setApi_lightCtr_Hazard(bool sts)
     if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
         qWarning() << "Cannot set Hazard: VAPI client not connected";
         emit connectionError("Cannot set vehicle data: not connected to server");
-        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        NOTIFY_ERROR("sdv-runtime", "Connection is not stable. User can restart via k9s (Ctrl + D > OK)");
         return;
     }
 
@@ -337,7 +338,7 @@ void ControlsAsync::qml_setApi_seat_driverSide_position(int position)
     if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
         qWarning() << "Cannot set seat position: VAPI client not connected";
         emit connectionError("Cannot set vehicle data: not connected to server");
-        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        NOTIFY_ERROR("sdv-runtime", "Connection is not stable. User can restart via k9s (Ctrl + D > OK)");
         return;
     }
 
@@ -367,7 +368,7 @@ void ControlsAsync::qml_setApi_hvac_driverSide_FanSpeed(uint8_t speed)
     if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
         qWarning() << "Cannot set driver fan speed: VAPI client not connected";
         emit connectionError("Cannot set vehicle data: not connected to server");
-        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        NOTIFY_ERROR("sdv-runtime", "Connection is not stable. User can restart via k9s (Ctrl + D > OK)");
         return;
     }
 
@@ -396,7 +397,7 @@ void ControlsAsync::qml_setApi_hvac_passengerSide_FanSpeed(uint8_t speed)
     if (!VAPI_CLIENT.isConnected(DK_VAPI_DATABROKER)) {
         qWarning() << "Cannot set passenger fan speed: VAPI client not connected";
         emit connectionError("Cannot set vehicle data: not connected to server");
-        NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+        NOTIFY_ERROR("sdv-runtime", "Connection is not stable. User can restart via k9s (Ctrl + D > OK)");
         return;
     }
 
@@ -468,7 +469,7 @@ void ControlsAsync::handleConnectionLost()
     subscriptionsActive = false;
     reconnectionAttempts = 0;
     emit connectionError("Connection to VAPI server lost");
-    NOTIFY_ERROR("sdv-runtime", "Connection get lost");
+    NOTIFY_WARNING("sdv-runtime", "Connection is not stable. User can restart via k9s (Ctrl + D > OK)");
 
     // Start attempting reconnection
     enableAutoReconnection();

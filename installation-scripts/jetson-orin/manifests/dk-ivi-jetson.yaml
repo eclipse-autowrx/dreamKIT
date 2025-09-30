@@ -75,7 +75,7 @@ spec:
       hostNetwork: true
       hostPID: true        # Required for nsenter to access host processes
       restartPolicy: Always
-      terminationGracePeriodSeconds: 30  # Reduced from 60 for faster cleanup
+      terminationGracePeriodSeconds: 15  # Further reduced for faster offline recovery
       
       tolerations:
       - key: "node.kubernetes.io/unreachable"
@@ -194,32 +194,32 @@ spec:
         image: ${DOCKER_HUB_NAMESPACE}/dk_ivi:latest
         imagePullPolicy: IfNotPresent
         
-        # Optimized startup probe with faster detection
+        # Fast startup probe for offline mode
         startupProbe:
           exec:
-            command: ["/bin/sh", "-c", "echo 'startup check' && sleep 1"]  # Reduced sleep
-          initialDelaySeconds: 20  # Reduced from 45
-          periodSeconds: 5         # Reduced from 15
-          timeoutSeconds: 3        # Reduced from 10
-          failureThreshold: 20     # Increased to maintain coverage but check faster
+            command: ["/bin/sh", "-c", "echo 'startup check' && sleep 1"]
+          initialDelaySeconds: 10  # Further reduced for offline mode
+          periodSeconds: 3         # Faster checks
+          timeoutSeconds: 2        # Reduced timeout
+          failureThreshold: 15     # Reduced for faster startup
         
-        # Faster readiness probe
+        # Optimized readiness probe for offline mode
         readinessProbe:
           exec:
             command: ["/bin/sh", "-c", "echo 'ready'"]
-          initialDelaySeconds: 25  # Reduced from 60
-          periodSeconds: 5         # Reduced from 20
-          timeoutSeconds: 3        # Reduced from 10
+          initialDelaySeconds: 15  # Further reduced for offline mode
+          periodSeconds: 3         # Faster checks
+          timeoutSeconds: 2        # Reduced timeout
           failureThreshold: 3
         
-        # Optimized liveness probe
+        # Optimized liveness probe for offline mode
         livenessProbe:
           exec:
             command: ["/bin/sh", "-c", "echo 'alive'"]
-          initialDelaySeconds: 35  # Reduced from 120
-          periodSeconds: 20        # Reduced from 45
-          timeoutSeconds: 5        # Reduced from 15
-          failureThreshold: 3      # Reduced from 5
+          initialDelaySeconds: 20  # Further reduced for offline mode
+          periodSeconds: 15        # Faster checks
+          timeoutSeconds: 3        # Reduced timeout
+          failureThreshold: 3
         
         # Increased resource allocation for faster startup
         resources:
