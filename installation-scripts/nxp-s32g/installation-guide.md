@@ -4,64 +4,142 @@
 
 ### Yocto BSP
 The S32G Goldbox is s32g274ardb2.
-If user refer self-prepare the Yocto BSP, let's ensure the following
-- url: https://gitlab.com/soafee/ewaol/meta-ewaol-machine
+If users self-prepare the Yocto BSP, ensure the following:
+- URL: https://gitlab.com/soafee/ewaol/meta-ewaol-machine
 - Docker + K3s enabled
-- Static IP.v4 address 192.168.56.49. User can refer to TeraTerm - UART0 (Speed: 115200)
+- Static IPv4 address 192.168.56.49. Users can access via TeraTerm - UART0 (Speed: 115200)
 
 ## Installation guide
 
-### Option 1: Standalone Installation
-
-Let's copy the whole 'nxp-s32g' folder into the S32G, ~/.dk/ folder.
-Then executing 'dk_install.sh' script from their
-
-```shell
-# At Host Machine (Jetson Orin or Ubuntu)
-sdv-orin@ubuntu:~$ scp -r {root_path}/dreamKIT/installation-scripts/nxp-s32g root@192.168.56.49:~/.dk/
-sdv-orin@ubuntu:~$ ssh root@192.168.56.49
-
-# At S32 Machine
-root@s32g274ardb2:~#
-root@s32g274ardb2:~# cd ~/.dk/nxp-s32g
-root@s32g274ardb2:~# ./dk_install.sh
-```
-
-### Option 2: K3s Worker Node Installation (Recommended)
-
-For distributed DreamKIT deployment, the NXP S32G acts as a K3s worker node connected to a Jetson Orin master. This setup is automatically configured when you run the K3s master preparation script on the Jetson Orin.
+For distributed DreamKIT deployment, the NXP S32G acts as a K3s worker node connected to a Jetson Orin master.
+The remote installation to the NXP-S32G worker node is a fully automated process that occurs during **Step 9** of the main installation. This process copies all necessary artifacts from the `nxp-s32g` folder and executes the complete DreamKIT installation on the remote ECU.
 
 **Prerequisites:**
 1. Jetson Orin must be set up as K3s master first (see [Jetson Orin Installation Guide](../jetson-orin/installation-guide.md#automated-setup-process))
 2. Network connectivity between devices (192.168.56.48 ↔ 192.168.56.49)
 
-**Worker Node Setup Process:**
+
+### What Happens During Remote Installation (via k3s-agent-offline-install.sh)
+
+**Phase 1: Artifact Transfer**
+- All files from the `installation-scripts/nxp-s32g/` directory are copied to `~/.dk/nxp-s32g/` on the remote S32G device
+- K3s agent configuration files (generated in Step 8) are transferred
+- DreamKIT installation scripts and manifests are copied
+- Docker registry configuration and certificates are transferred
+
+**Phase 2: Remote System Configuration**
+```shell
+# The script executes remotely on 192.168.56.49:
+ssh root@192.168.56.49 "cd ~/.dk/nxp-s32g && ./dk_install.sh"
+```
+
+**Phase 3: K3s Worker Node Setup**
+- Installs and configures K3s agent service
+- Sets up registry mirror pointing to Jetson Orin (`192.168.56.48:5000`)
+- Configures network routes and time synchronization
+- Joins the K3s cluster as worker node `vip`
+
+**Phase 4: Service Deployment**
+- Deploys DreamKIT services to the worker node
+- Configures container runtime with proper registry access
+- Establishes communication with master node services
+
+#### Files Transferred to NXP-S32G
+
+The following artifacts are automatically copied from `installation-scripts/nxp-s32g/` to the remote ECU:
+
+**Core Installation Files:**
+- `dk_install.sh` - Main installation script for S32G
+- `scripts/` - All installation scripts adapted for S32G environment
+- `manifests/` - Kubernetes manifests for worker node services
+
+**K3s Configuration Files:**
+- `k3s.service` - Systemd service definition for K3s agent
+- `registries.yaml` - Docker registry mirror configuration
+- `daemon.json` - Containerd registry settings
+- `dreamos-setup.service` - System initialization service
+- `dreamos_setup.sh` - Network and time sync configuration
+
+**Runtime Configuration:**
+- Environment variable files for S32G-specific settings
+- Network configuration for cluster communication
+- Registry certificates and authentication
+
+#### Verification of Remote Installation
+
+After the remote installation completes, you can verify the setup:
 
 ```shell
-# 1. On Jetson Orin - Generate worker node artifacts
-sudo scripts/k3s-master-prepare.sh eth0
+# Check worker node status from master
+kubectl get nodes -o wide
 
-# 2. Transfer generated files to S32G
-sdv-orin@ubuntu:~$ scp -r installation-scripts/nxp-s32g/scripts root@192.168.56.49:~/.dk/nxp-s32g/
+# Expected output should show both nodes:
+# NAME   STATUS   ROLES                       AGE   VERSION        INTERNAL-IP     EXTERNAL-IP
+# xip    Ready    control-plane,etcd,master   1h    v1.33.4+k3s1   192.168.56.48   <none>
+# vip    Ready    <none>                      1h    v1.22.6-k3s1   192.168.56.49   <none>
 
-# 3. On S32G - Install K3s and configure as worker
-root@s32g274ardb2:~# cd ~/.dk/nxp-s32g
+# Verify services running on worker node
+kubectl get pods -o wide --all-namespaces | grep 192.168.56.49
 
-# Install K3s binary
-root@s32g274ardb2:~# curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_START=true sh -
+# Check worker node logs remotely
+ssh root@192.168.56.49 "journalctl -u k3s -n 20"
 
-# Install generated service files
-root@s32g274ardb2:~# cp scripts/k3s.service /etc/systemd/system/
-root@s32g274ardb2:~# cp scripts/dreamos-setup.service /etc/systemd/system/
-root@s32g274ardb2:~# mkdir -p /etc/rancher/k3s
-root@s32g274ardb2:~# cp scripts/registries.yaml /etc/rancher/k3s/
-root@s32g274ardb2:~# cp scripts/daemon.json /etc/docker/
+# Verify registry access from worker
+ssh root@192.168.56.49 "curl -v http://192.168.56.48:5000/v2/_catalog"
+```
 
-# Enable and start services
-root@s32g274ardb2:~# systemctl daemon-reload
-root@s32g274ardb2:~# systemctl enable dreamos-setup.service k3s.service
-root@s32g274ardb2:~# systemctl start dreamos-setup.service
-root@s32g274ardb2:~# systemctl start k3s.service
+#### Remote Installation Troubleshooting
+
+**SSH Connection Issues:**
+```shell
+# Test SSH connectivity before installation
+ssh root@192.168.56.49 "echo 'Connection successful'"
+
+# Check SSH key authentication
+ssh-keygen -R 192.168.56.49  # Remove old host key if needed
+ssh root@192.168.56.49 "whoami"
+```
+
+**File Transfer Problems:**
+```shell
+# Manually verify file transfer
+scp -r installation-scripts/nxp-s32g/* root@192.168.56.49:~/.dk/nxp-s32g/
+
+# Check transferred files
+ssh root@192.168.56.49 "ls -la ~/.dk/nxp-s32g/"
+```
+
+**Worker Node Join Issues:**
+```shell
+# Check K3s agent status on worker
+ssh root@192.168.56.49 "systemctl status k3s"
+
+# View K3s agent logs
+ssh root@192.168.56.49 "journalctl -u k3s -f"
+
+# Restart K3s service on worker
+ssh root@192.168.56.49 "systemctl restart k3s"
+```
+
+#### Manual Remote Installation
+
+If automatic remote installation fails, you can perform manual installation:
+
+```shell
+# 1. Copy artifacts manually
+scp -r installation-scripts/nxp-s32g/* root@192.168.56.49:~/.dk/nxp-s32g/
+
+# 2. Execute remote installation
+ssh root@192.168.56.49 "cd ~/.dk/nxp-s32g && chmod +x *.sh && ./dk_install.sh"
+
+# 3. Delete the existing node if reconnecting
+kubectl delete node vip --ignore-not-found
+
+# 4. Verify worker node joined cluster
+kubectl get nodes
+
+# 5. Check service deployment
+kubectl get pods --all-namespaces -o wide
 ```
 
 **What the Worker Node Setup Includes:**
@@ -82,8 +160,8 @@ vip    Ready    <none>                      16s     v1.22.6-k3s1
 xip    Ready    control-plane,etcd,master   2m11s   v1.33.4+k3s1
 ```
 
-Note:
-- If facing problem with executing the .sh file, following are the referrence command to fix it
+**Note:**
+- If facing problems executing .sh files, use the following commands to fix line endings and permissions:
 ```shell
 sed -i -e 's/\r$//' *.sh
 chmod +x *.sh
