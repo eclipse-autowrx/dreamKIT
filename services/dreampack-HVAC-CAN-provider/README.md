@@ -84,12 +84,14 @@ Vehicle.Speed:
 
 **Test Workflow:**
 ```bash
-# 1. Send CAN message (ID: 0x257, bit 24, value: 1)
+# 1. Send CAN message (ID: 0x257, bit 24-32)
 cansend vcan0 257#0000000001000000
+cansend vcan0 257#0000000100000000
 
 # 2. Monitor in KUKSA
 kuksa-client grpc://127.0.0.1:55555
 subscribe Vehicle.Speed
+# ✓ Value updates to 256
 # ✓ Value updates to 1
 ```
 
@@ -121,7 +123,7 @@ setTargetValue Vehicle.Body.Lights.Beam.Low.IsOn true
 
 # 2. Monitor CAN bus
 candump vcan0
-# ✓ Observe: 3E9#0100000000000000 (ID: 0x3E9, bit 0 = 1)
+# ✓ Observe: 3E9#0100000000000000 (ID: 0x3E9)
 ```
 
 ### Generation Script
