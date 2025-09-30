@@ -11,7 +11,6 @@
 # start.sh - Start script for dk_service_can_provider
 # Usage: ./start.sh [local|prod] [options]
 
-set -e
 
 # Default values
 ENVIRONMENT=${1:-local}
@@ -79,7 +78,10 @@ start_local() {
         docker kill ${CONTAINER_NAME} >/dev/null 2>&1 || true
         docker rm ${CONTAINER_NAME} >/dev/null 2>&1 || true
     fi
-    
+
+    # Remove existing container if exists
+    docker kill ${IMAGE_NAME}; docker rm ${IMAGE_NAME}
+
     # Start container
     print_info "Starting dk_service_can_provider container..."
     docker run -d -it \
