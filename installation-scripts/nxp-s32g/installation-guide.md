@@ -32,7 +32,7 @@ root@s32g274ardb2:~# ./dk_install.sh
 For distributed DreamKIT deployment, the NXP S32G acts as a K3s worker node connected to a Jetson Orin master. This setup is automatically configured when you run the K3s master preparation script on the Jetson Orin.
 
 **Prerequisites:**
-1. Jetson Orin must be set up as K3s master first (see [Jetson Orin Installation Guide](../jetson-orin/installation-guide.md#k3s-master-setup-and-worker-node-preparation))
+1. Jetson Orin must be set up as K3s master first (see [Jetson Orin Installation Guide](../jetson-orin/installation-guide.md#automated-setup-process))
 2. Network connectivity between devices (192.168.56.48 ↔ 192.168.56.49)
 
 **Worker Node Setup Process:**
