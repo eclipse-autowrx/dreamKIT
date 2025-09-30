@@ -203,123 +203,162 @@ kubectl delete -f tmp/dk_manifests/parsed_sdv-runtime.yaml
 kubectl apply -f tmp/dk_manifests/parsed_sdv-runtime.yaml
 ```
 
-### K3s Scripts Integration with NXP-S32G Setup
 
-#### Step 8: K3s Master Preparation (`scripts/k3s-master-prepare.sh`)
-This script:
-- Installs K3s master on Jetson Orin with optimized settings
-- Detects network interface (e.g., `eth0`) and binds K3s to detected IP
-- **Generates worker node artifacts** for NXP-S32G deployment
-- Creates necessary configuration files in `../nxp-s32g/scripts/`:
-  - `k3s.service` - systemd service for K3s agent
-  - `dreamos-setup.service` - system initialization service
-  - `registries.yaml` - registry mirror configuration
-  - `daemon.json` - containerd registry settings
-  - `dreamos_setup.sh` - network and time sync script
+## K3s Cluster Overview
 
-#### Step 9: Automated Worker Node Deployment (`scripts/k3s-agent-offline-install.sh`)
-This script automatically:
-- **Transfers generated files** from Step 8 to NXP-S32G ECU
-- **Remotely installs K3s binary** on target device
-- **Configures systemd services** for automatic startup
-- **Validates connectivity** and cluster joining
-- **Complete hands-off setup** - no manual intervention needed on ECU
+DreamKIT uses a distributed K3s cluster with Jetson Orin as the master node and NXP-S32G as the worker node. The setup is fully automated through the main installation process (steps 8-9).
 
-**Important Linkage:**
-```shell
-# Step 8 generates files needed for Step 9
-scripts/k3s-master-prepare.sh eth0        # Generates worker artifacts
-scripts/k3s-agent-offline-install.sh      # Uses generated artifacts to setup worker
+### Cluster Architecture
 
-# Files flow: Jetson Orin → NXP-S32G
-# Generated on Jetson:     ../nxp-s32g/scripts/k3s.service
-# Deployed to S32G:        /etc/systemd/system/k3s.service
-```
+**Master Node (Jetson Orin):**
+- Node name: `xip`
+- Runs K3s server with embedded device optimizations
+- Hosts local Docker registry for worker node image distribution
+- Manages SDV services deployment and orchestration
 
-**Result:** Complete distributed K3s cluster with Jetson Orin (master) + NXP-S32G (worker)
+**Worker Node (NXP-S32G):**
+- Node name: `vip`
+- IP: `192.168.56.49`
+- Automatically configured through remote deployment from master
+- Uses registry mirror for efficient container image access
 
-## K3s Master Setup and Worker Node Preparation
+### Automated Setup Process
 
-The `scripts/k3s-master-prepare.sh` script provides automated K3s master setup and worker node artifact generation for multi-device deployments.
+The K3s cluster setup is handled automatically during DreamKIT installation:
 
-### Usage
+1. **Step 8** (`k3s-master-prepare.sh`): Sets up master node and generates worker artifacts
+2. **Step 9** (`k3s-agent-offline-install.sh`): Remotely deploys and configures worker node
 
-```shell
-# Basic usage with network interface detection
-sudo scripts/k3s-master-prepare.sh eth0
+**Result:** Complete distributed K3s cluster ready for SDV service deployment
 
-# With custom user specification
-sudo DK_USER="username" scripts/k3s-master-prepare.sh eth0
+### K3s Master Setup and Worker Node Preparation
 
-# Master-only mode (when network interface is unavailable)
-sudo scripts/k3s-master-prepare.sh eth0  # Will automatically detect and switch to master-only
-```
-
-### System Impact on Jetson Orin (Master Node)
+#### Impact on Jetson Orin (Master Node)
+The `scripts/k3s-master-prepare.sh` script configures the Jetson Orin as the K3s master with the following system changes:
 
 **Network Configuration:**
-- Detects IP address from specified network interface (e.g., `eth0`)
-- Configures K3s to bind to the detected IP address
+- Detects and binds K3s to the network interface (e.g., `eth0`)
+- Configures the node name as `xip`
 - Sets up network wait scripts for interface availability
-- Handles multi-homed network configurations
-
-**K3s Master Installation:**
-- Installs K3s server with embedded device optimizations
-- Node name: `xip`
-- Disables problematic components (Traefik, metrics-server, etc.)
-- Configures proper resource limits for embedded hardware
-- Sets up flannel networking with host-gateway backend
 
 **System Services:**
-- Creates systemd override for K3s service with network dependencies
-- Installs network preparation scripts in `/usr/local/bin/`
-- Configures kernel module loading (br_netfilter, overlay)
+- Installs K3s server with embedded device optimizations
+- Creates systemd overrides with network dependencies
+- Configures kernel modules (br_netfilter, overlay)
 - Sets up extended timeouts for embedded hardware
 
 **User Access:**
 - Automatically configures kubectl access for the original user
 - Sets up both `/etc/rancher/k3s/k3s.yaml` and `~/.kube/config`
-- Supports auto-detection when run via sudo or directly
 
-### Worker Node Artifact Generation
+#### Impact on NXP-S32G (Worker Node)
+When network interface is detected, the script generates worker node artifacts for remote deployment:
 
-When a valid network interface is detected, the script generates deployment artifacts for the NXP S32G worker node in `../nxp-s32g/scripts/`:
-
-**Generated Files:**
+**Generated Configuration Files:**
 - `k3s.service` - systemd service for K3s agent
-- `dreamos-setup.service` - systemd service for DreamOS initialization
-- `registries.yaml` - K3s registry mirror configuration
-- `daemon.json` - containerd registry mirror configuration
-- `dreamos_setup.sh` - network and system setup script (updated with current time/gateway)
+- `dreamos-setup.service` - system initialization service
+- `registries.yaml` - registry mirror configuration
+- `daemon.json` - containerd registry settings
+- `dreamos_setup.sh` - network and time sync script
 
 **Worker Node Configuration:**
-- IP: `192.168.56.49` (NXP S32G)
-- Interface: `eth0`
 - Node name: `vip`
-- Registry mirror: Uses detected master IP as registry mirror
+- IP: `192.168.56.49`
+- Registry mirror: Uses master IP for efficient image access
 - Gateway: Routes traffic through master node
 
-### Operational Modes
+The `scripts/k3s-agent-offline-install.sh` script automatically transfers these files and remotely configures the NXP-S32G worker node without manual intervention.
 
-**Normal Mode (Network Interface Available):**
-- Full K3s master setup with network binding
-- Complete worker node artifact generation
-- Registry mirror service for container images
-- Multi-node cluster preparation
+### Integration with DreamKIT Services
 
-**Master-Only Mode (Network Interface Unavailable):**
-- Standalone K3s master without specific network binding
-- No worker node artifacts generated
-- Suitable for single-node deployments or testing
-- Automatic fallback when interface detection fails
+The K3s cluster provides the foundation for running DreamOS services:
+- **Container Orchestration**: Manages SDV runtime, DK manager, and DK IVI services
+- **Service Discovery**: Enables communication between distributed services
+- **Load Balancing**: Distributes workloads across cluster nodes
+- **Registry Integration**: Uses local registry for efficient image distribution to worker nodes
 
-### Integration with DreamKIT Installation
+### K3s Cluster Troubleshooting
 
-The K3s setup integrates with the main DreamKIT installation:
-- Provides container orchestration for SDV services
-- Enables distributed deployment across Jetson Orin (master) and NXP S32G (worker)
-- Supports the SDV runtime environment with proper networking
-- Facilitates service discovery and load balancing
+**Check Cluster Status:**
+```shell
+# Verify both nodes are ready
+kubectl get nodes -o wide
+
+# Expected output:
+# NAME   STATUS   ROLES                       AGE   VERSION        INTERNAL-IP     EXTERNAL-IP
+# xip    Ready    control-plane,etcd,master   1h    v1.33.4+k3s1   192.168.56.48   <none>
+# vip    Ready    <none>                      1h    v1.22.6-k3s1   192.168.56.49   <none>
+```
+
+**Worker Node Connection Issues:**
+```shell
+# Check if worker node is reachable
+ping -c 3 192.168.56.49
+
+# Test SSH connectivity to worker
+ssh root@192.168.56.49 "systemctl status k3s"
+
+# Check worker node logs remotely
+ssh root@192.168.56.49 "journalctl -u k3s -f"
+```
+
+**Registry Connectivity Problems:**
+```shell
+# Verify registry is accessible from worker node
+ssh root@192.168.56.49 "curl -v http://192.168.56.48:5000/v2/_catalog"
+
+# Check registry mirror configuration on worker
+ssh root@192.168.56.49 "cat /etc/rancher/k3s/registries.yaml"
+```
+
+**Node Join Issues:**
+```shell
+# Check master node token
+sudo cat /var/lib/rancher/k3s/server/node-token
+
+# Manually rejoin worker node (if needed)
+ssh root@192.168.56.49 "systemctl stop k3s"
+ssh root@192.168.56.49 "rm -rf /var/lib/rancher/k3s/agent"
+ssh root@192.168.56.49 "systemctl start k3s"
+```
+
+**Service Deployment Issues:**
+```shell
+# Check if services are running on correct nodes
+kubectl get pods -o wide --all-namespaces
+
+# Verify node labels and taints
+kubectl describe node xip
+kubectl describe node vip
+
+# Check resource availability
+kubectl top nodes
+kubectl describe node vip | grep -A 5 "Allocated resources"
+```
+
+**Network Connectivity Troubleshooting:**
+```shell
+# Test pod-to-pod communication across nodes
+kubectl run test-pod --image=busybox --rm -it -- ping <pod-ip-on-other-node>
+
+# Check flannel network status
+kubectl get pods -n kube-system | grep flannel
+kubectl logs -n kube-system daemonset/flannel
+
+# Verify network routes
+ssh root@192.168.56.49 "ip route show"
+```
+
+**Worker Node Recovery:**
+```shell
+# Complete worker node reset and rejoin
+ssh root@192.168.56.49 "systemctl stop k3s"
+ssh root@192.168.56.49 "rm -rf /var/lib/rancher/k3s"
+ssh root@192.168.56.49 "systemctl restart k3s"
+
+# If automatic rejoin fails, re-run worker setup
+scripts/k3s-agent-offline-install.sh
+```
 
 ## Un-Installation guide
 ```shell

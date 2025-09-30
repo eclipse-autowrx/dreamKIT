@@ -5,7 +5,8 @@
 ### Yocto BSP
 The S32G Goldbox is s32g274ardb2.
 If user refer self-prepare the Yocto BSP, let's ensure the following
-- Docker enabled
+- url: https://gitlab.com/soafee/ewaol/meta-ewaol-machine
+- Docker + K3s enabled
 - Static IP.v4 address 192.168.56.49. User can refer to TeraTerm - UART0 (Speed: 115200)
 
 ## Installation guide
