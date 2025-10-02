@@ -275,10 +275,18 @@ python3 << EOF
 import json
 import sys
 
-# Read current AppManifest.json
+# Read current AppManifest.json or create default if it doesn't exist
 try:
     with open("$APP_MANIFEST_PATH", 'r') as f:
         manifest = json.load(f)
+except FileNotFoundError:
+    # Create default manifest structure if file doesn't exist
+    manifest = {
+        "manifestVersion": "v3",
+        "name": "SampleApp",
+        "interfaces": []
+    }
+    print(f"INFO: AppManifest.json not found, creating new one", file=sys.stderr)
 except Exception as e:
     print(f"ERROR: Failed to read AppManifest.json: {e}", file=sys.stderr)
     sys.exit(1)
@@ -306,6 +314,9 @@ for interface in manifest.get('interfaces', []):
         if 'datapoints' not in interface['config']:
             interface['config']['datapoints'] = {}
 
+        # Add VSS source URL if not present
+        interface['config']['src'] = "https://github.com/COVESA/vehicle_signal_specification/releases/download/v4.0/vss_rel_4.0.json"
+
         interface['config']['datapoints']['required'] = [
             {
                 'path': signal['path'],
@@ -314,6 +325,24 @@ for interface in manifest.get('interfaces', []):
             for signal in valid_signals
         ]
         break
+
+# If vehicle-signal-interface not found but VSS signals detected, add it
+if not vsi_found and valid_signals:
+    manifest['interfaces'].append({
+        'type': 'vehicle-signal-interface',
+        'config': {
+            'src': 'https://github.com/COVESA/vehicle_signal_specification/releases/download/v4.0/vss_rel_4.0.json',
+            'datapoints': {
+                'required': [
+                    {
+                        'path': signal['path'],
+                        'access': signal['access']
+                    }
+                    for signal in valid_signals
+                ]
+            }
+        }
+    })
 
 # Update or remove pubsub interface based on detected usage
 pubsub_found = False
