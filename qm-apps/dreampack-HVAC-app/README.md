@@ -34,7 +34,7 @@ This template provides an end-to-end solution for developing vehicle application
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         DEVELOPMENT WORKFLOW                             │
+│                         DEVELOPMENT WORKFLOW                            │
 └─────────────────────────────────────────────────────────────────────────┘
 
 1️⃣  DEFINE USE CASE
@@ -57,14 +57,14 @@ This template provides an end-to-end solution for developing vehicle application
                           ↓
 3️⃣  BUILD SYSTEM (./build.sh)
    ┌──────────────────────────────────────────────────────────────┐
-   │ INPUT                                                         │
+   │ INPUT                                                        │
    │ ┌──────────────────┐  ┌──────────────────────────────────┐ │
    │ │ System VSS Model │  │ Your Application Code            │ │
    │ │ ~/.dk/sdv-       │  │ app/src/main.py                  │ │
    │ │ runtime/vss.json │  │                                  │ │
    │ │   (optional)     │  │                                  │ │
    │ └──────────────────┘  └──────────────────────────────────┘ │
-   │                                ↓                             │
+   │                                ↓                            │
    │ PROCESSING LOGIC                                            │
    │ ┌────────────────────────────────────────────────────────┐ │
    │ │ 1. Parse System VSS Model (if available)               │ │
@@ -135,7 +135,7 @@ This template provides an end-to-end solution for developing vehicle application
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
-│                        SYSTEM ARCHITECTURE                                 │
+│                        SYSTEM ARCHITECTURE                                │
 └───────────────────────────────────────────────────────────────────────────┘
 
 DEVELOPMENT PHASE
