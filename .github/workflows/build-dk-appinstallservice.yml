@@ -10,8 +10,7 @@ name: Build DK AppInstallService Docker Image
 on:
   push:
     branches:
-      - main
-      - develop
+      - '**'
     paths:
       - 'dreamos-core/dk_appinstallservice/**'
       - '.github/workflows/build-dk-appinstallservice.yml'

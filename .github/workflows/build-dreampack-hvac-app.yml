@@ -10,8 +10,7 @@ name: Build dreampack-HVAC-app Docker Image
 on:
   push:
     branches:
-      - main
-      - develop
+      - '**'
     paths:
       - 'qm-apps/dreampack-HVAC-app/**'
       - '.github/workflows/build-dreampack-hvac-app.yml'

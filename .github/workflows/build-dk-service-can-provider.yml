@@ -10,8 +10,7 @@ name: Build CAN Provider Docker Image
 on:
   push:
     branches:
-      - main
-      - develop
+      - '**'
     paths:
       - 'services/dreampack-HVAC-CAN-provider/**'
       - '.github/workflows/build-dk-service-can-provider.yml'

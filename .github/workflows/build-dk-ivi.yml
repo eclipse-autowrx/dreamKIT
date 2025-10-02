@@ -10,8 +10,7 @@ name: Build DK IVI Docker Image
 on:
   push:
     branches:
-      - main
-      - develop
+      - '**'
     paths:
       - 'dreamos-core/dk-ivi-lite/**'
       - '.github/workflows/build-dk-ivi.yml'
