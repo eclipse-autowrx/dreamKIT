@@ -135,7 +135,7 @@ This template provides an end-to-end solution for developing vehicle application
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
-│                        SYSTEM ARCHITECTURE                                 │
+│                        SYSTEM ARCHITECTURE                                │
 └───────────────────────────────────────────────────────────────────────────┘
 
 DEVELOPMENT PHASE
