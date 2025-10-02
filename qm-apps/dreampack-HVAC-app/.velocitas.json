@@ -1,0 +1,27 @@
+{
+    "packages": {
+        "devenv-runtimes": "v4.1.0",
+        "devenv-github-workflows": "v7.0.0",
+        "devenv-github-templates": "v1.0.5",
+        "devenv-devcontainer-setup": "v3.0.0"
+    },
+    "components": [
+        "runtime-local",
+        "runtime-kanto",
+        "deployment-kanto",
+        "pantaris-integration",
+        "github-workflows",
+        "github-templates",
+        "devcontainer-setup",
+        "vehicle-signal-interface",
+        "grpc-interface-support"
+    ],
+    "variables": {
+        "language": "python",
+        "repoType": "app",
+        "appManifestPath": "app/AppManifest.json",
+        "githubRepoId": "eclipse-velocitas/vehicle-app-python-template",
+        "generatedModelPath": "./gen/vehicle_model"
+    },
+    "cliVersion": "v0.13.2"
+}
