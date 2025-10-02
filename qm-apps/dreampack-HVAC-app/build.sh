@@ -23,20 +23,28 @@ DOCKERFILE_PATH="./app/Dockerfile"
 
 echo -e "${GREEN}Starting Velocitas Application Build...${NC}"
 
-# Step 1: Check if VSS model exists
+# Step 1: Check if VSS model exists (optional)
 if [ ! -f "$VSS_MODEL_PATH" ]; then
-    echo -e "${RED}ERROR: VSS model not found at $VSS_MODEL_PATH${NC}"
-    exit 1
+    echo -e "${YELLOW}WARNING: VSS model not found at $VSS_MODEL_PATH${NC}"
+    echo -e "${YELLOW}Skipping VSS signal validation...${NC}"
+    VSS_AVAILABLE=false
+else
+    echo -e "${GREEN}✓ Found VSS model at $VSS_MODEL_PATH${NC}"
+    VSS_AVAILABLE=true
 fi
 
-echo -e "${GREEN}✓ Found VSS model at $VSS_MODEL_PATH${NC}"
+# Step 2: Parse system VSS model to extract available signals (if available)
+if [ "$VSS_AVAILABLE" = true ]; then
+    echo -e "${YELLOW}Parsing system VSS model...${NC}"
+else
+    echo -e "${YELLOW}Skipping VSS model parsing (no VSS model found)...${NC}"
+    SYSTEM_VSS_SIGNALS=""
+fi
 
-# Step 2: Parse system VSS model to extract available signals
-echo -e "${YELLOW}Parsing system VSS model...${NC}"
-
-# Extract all VSS paths from the system model
-# This handles nested JSON structure and extracts paths
-SYSTEM_VSS_SIGNALS=$(python3 << EOF
+if [ "$VSS_AVAILABLE" = true ]; then
+    # Extract all VSS paths from the system model
+    # This handles nested JSON structure and extracts paths
+    SYSTEM_VSS_SIGNALS=$(python3 << EOF
 import json
 import sys
 
@@ -80,12 +88,13 @@ except Exception as e:
 EOF
 )
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}ERROR: Failed to parse system VSS model${NC}"
-    exit 1
-fi
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}ERROR: Failed to parse system VSS model${NC}"
+        exit 1
+    fi
 
-echo -e "${GREEN}✓ Parsed $(echo "$SYSTEM_VSS_SIGNALS" | wc -l) VSS signals from system model${NC}"
+    echo -e "${GREEN}✓ Parsed $(echo "$SYSTEM_VSS_SIGNALS" | wc -l) VSS signals from system model${NC}"
+fi
 
 # Step 3: Parse main.py to extract VSS signal usage and pubsub topics
 echo -e "${YELLOW}Analyzing main.py for VSS signal usage and pubsub topics...${NC}"
@@ -200,10 +209,11 @@ echo -e "${GREEN}✓ Extracted pubsub topics${NC}"
 echo "  Reads: $PUBSUB_READS"
 echo "  Writes: $PUBSUB_WRITES"
 
-# Step 4: Validate user VSS signals against system VSS model
-echo -e "${YELLOW}Validating VSS signals...${NC}"
+# Step 4: Validate user VSS signals against system VSS model (if VSS model available)
+if [ "$VSS_AVAILABLE" = true ]; then
+    echo -e "${YELLOW}Validating VSS signals...${NC}"
 
-VALIDATION_RESULT=$(python3 << EOF
+    VALIDATION_RESULT=$(python3 << EOF
 import json
 import sys
 import os
@@ -244,13 +254,19 @@ else:
 EOF
 )
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}ERROR: Invalid VSS signals detected:${NC}"
-    echo "$VALIDATION_RESULT"
-    exit 1
-fi
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}ERROR: Invalid VSS signals detected:${NC}"
+        echo "$VALIDATION_RESULT"
+        exit 1
+    fi
 
-echo -e "${GREEN}✓ All VSS signals are valid${NC}"
+    echo -e "${GREEN}✓ All VSS signals are valid${NC}"
+else
+    echo -e "${YELLOW}Skipping VSS signal validation (no VSS model available)${NC}"
+    # When no VSS model is available, create a simple validation result with all detected signals
+    VALIDATION_RESULT="VALID
+$USER_VSS_USAGE"
+fi
 
 # Step 5: Update AppManifest.json
 echo -e "${YELLOW}Updating AppManifest.json...${NC}"

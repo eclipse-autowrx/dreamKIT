@@ -62,13 +62,15 @@ This template provides an end-to-end solution for developing vehicle application
    │ │ System VSS Model │  │ Your Application Code            │ │
    │ │ ~/.dk/sdv-       │  │ app/src/main.py                  │ │
    │ │ runtime/vss.json │  │                                  │ │
+   │ │   (optional)     │  │                                  │ │
    │ └──────────────────┘  └──────────────────────────────────┘ │
    │                                ↓                             │
    │ PROCESSING LOGIC                                            │
    │ ┌────────────────────────────────────────────────────────┐ │
-   │ │ 1. Parse System VSS Model                              │ │
+   │ │ 1. Parse System VSS Model (if available)               │ │
    │ │    • Extract all available signals                     │ │
    │ │    • Build validation dictionary                       │ │
+   │ │    • If missing: Skip validation, show warning         │ │
    │ │                                                        │ │
    │ │ 2. Analyze Application Code (main.py)                  │ │
    │ │    • Detect: self.Vehicle.*.get()  → READ access       │ │
@@ -79,10 +81,11 @@ This template provides an end-to-end solution for developing vehicle application
    │ │             FanSpeed → WRITE                           │ │
    │ │    • Detect: subscribe()/publish() → Pubsub topics     │ │
    │ │                                                        │ │
-   │ │ 3. Validate Signals                                    │ │
+   │ │ 3. Validate Signals (if VSS model available)           │ │
    │ │    • Check each used signal exists in system model     │ │
    │ │    • ✅ PASS: Continue build                            │ │
    │ │    • ❌ FAIL: Exit with error listing invalid signals   │ │
+   │ │    • No VSS model: Skip validation, continue build     │ │
    │ │                                                        │ │
    │ │ 4. Generate Artifacts                                  │ │
    │ │    • Update app/AppManifest.json with:                 │ │
@@ -251,7 +254,7 @@ PRODUCTION PHASE (Marketplace Deployment)
 ### Prerequisites
 
 - Docker installed
-- VSS model at `~/.dk/sdv-runtime/vss.json`
+- VSS model at `~/.dk/sdv-runtime/vss.json` (optional)
 - Vehicle Data Broker running (for local testing)
 
 ### 3-Step Development
@@ -289,8 +292,8 @@ class HVACController(VehicleApp):
     async def on_start(self):
         # AI-powered HVAC control - sets fan speed based on scenarios
         # Detected as WRITE access to HVAC fan speed signals
-        await self.Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed.set(75)
-        await self.Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed.set(75)
+        await self.Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed.set(80)
+        await self.Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed.set(80)
 ```
 
 #### Example 2: Read Vehicle Speed (Alternative)
@@ -326,12 +329,12 @@ class MessagingApp(VehicleApp):
 
 **What happens during build:**
 
-1. **VSS Model Parsing**: Extracts all 723+ signals from `~/.dk/sdv-runtime/vss.json`
+1. **VSS Model Parsing**: Extracts all 723+ signals from `~/.dk/sdv-runtime/vss.json` (if available)
 2. **Code Analysis**:
    - Scans `main.py` for `self.Vehicle.*.get()` → READ
    - Scans `main.py` for `self.Vehicle.*.set()` → WRITE
    - Scans for `subscribe()`/`publish()` patterns → Pubsub topics
-3. **Validation**: Verifies all signals exist in system VSS model
+3. **Validation**: Verifies all signals exist in system VSS model (if VSS model is available)
 4. **Manifest Update**: Automatically updates `app/AppManifest.json`:
    ```json
    {
@@ -359,7 +362,7 @@ class MessagingApp(VehicleApp):
    ```
 5. **Docker Build**: Creates image named after parent folder
 
-**Build Output Example:**
+**Build Output Example (with VSS model):**
 
 ```
 ✓ Found VSS model at /home/developer/.dk/sdv-runtime/vss.json
@@ -379,6 +382,30 @@ class MessagingApp(VehicleApp):
   Reads: []
   Writes: []
 ✓ All VSS signals are valid
+✓ Updated AppManifest.json
+✓ Successfully built Docker image: dreampack-hvac-app:latest
+```
+
+**Build Output Example (without VSS model):**
+
+```
+WARNING: VSS model not found at ~/.dk/sdv-runtime/vss.json
+Skipping VSS signal validation...
+✓ Extracted VSS signal usage from main.py
+[
+  {
+    "path": "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed",
+    "access": "write"
+  },
+  {
+    "path": "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed",
+    "access": "write"
+  }
+]
+✓ Extracted pubsub topics
+  Reads: []
+  Writes: []
+Skipping VSS signal validation (no VSS model available)
 ✓ Updated AppManifest.json
 ✓ Successfully built Docker image: dreampack-hvac-app:latest
 ```
@@ -435,127 +462,27 @@ Stops and removes the Docker container gracefully.
 ### Overview
 
 Once your application is tested locally, deploy it to production nodes via the marketplace system.
-
-### Deployment Process
-
-#### 1. Tag and Push Docker Image
-
-```bash
-# Tag your image for registry
-IMAGE_NAME="dreampack-hvac-app"
-REGISTRY="ghcr.io/your-organization"
-VERSION="v1.0.0"
-
-docker tag ${IMAGE_NAME}:latest ${REGISTRY}/${IMAGE_NAME}:${VERSION}
-docker tag ${IMAGE_NAME}:latest ${REGISTRY}/${IMAGE_NAME}:latest
-
-# Push to registry
-docker push ${REGISTRY}/${IMAGE_NAME}:${VERSION}
-docker push ${REGISTRY}/${IMAGE_NAME}:latest
-```
-
-#### 2. Create Marketplace Configuration
-
-Create a deployment descriptor JSON file:
+- Access url: https://marketplace.digitalauto.tech/
+- Create a deployment descriptor JSON
 
 ```json
 {
-  "name": "AI-Powered HVAC Control",
-  "description": "AI-driven climate control with automated HVAC fan speed adjustment",
-  "version": "1.0.0",
-  "target": "vip",
-  "platform": "linux/arm64",
-  "dockerImageURL": "ghcr.io/your-organization/dreampack-hvac-app:latest",
-  "runtimeCfg": {
+  "Target": "xip",
+  "Platform": "linux/arm64",
+  "DockerImageURL": "ghcr.io/eclipse-autowrx/dreampack-hvac-app:latest",
+  "RuntimeCfg": {
     "SDV_MIDDLEWARE_TYPE": "native",
     "SDV_VEHICLEDATABROKER_ADDRESS": "grpc://192.168.56.48:55555",
     "SDV_MQTT_ADDRESS": "mqtt://192.168.56.48:1883"
-  },
-  "resources": {
-    "cpu": "0.5",
-    "memory": "512Mi"
-  },
-  "vssSignals": {
-    "required": [
-      {"path": "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed", "access": "write"},
-      {"path": "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed", "access": "write"}
-    ]
   }
 }
 ```
 
-#### 3. Marketplace Configuration Fields
-
-| Field | Description | Example |
-|-------|-------------|---------|
-| `target` | Target edge node identifier | `vip`, `edge-node-1` |
-| `platform` | Container platform architecture | `linux/arm64`, `linux/amd64` |
-| `dockerImageURL` | Full path to container image | `ghcr.io/org/app:latest` |
-| `runtimeCfg` | Environment variables for runtime | See example above |
-| `resources` | CPU/memory limits | `{"cpu": "0.5", "memory": "512Mi"}` |
-| `vssSignals` | VSS signals used (from AppManifest) | Copied from `app/AppManifest.json` |
-
-#### 4. Deploy to Marketplace
-
-```bash
-# Option A: Update marketplace web page with configuration
-curl -X POST https://marketplace.example.com/api/apps \
-  -H "Content-Type: application/json" \
-  -d @marketplace-config.json
-
-# Option B: Upload via marketplace UI
-# Navigate to marketplace dashboard → Add Application → Upload JSON
-```
-
-#### 5. Verify Deployment
-
-```bash
-# Check deployment status on target node
-ssh target-node
-docker ps | grep dreampack-hvac-app
-
-# View application logs on target
-docker logs -f dreampack-hvac-app
-```
-
-### Production Configuration Examples
-
-#### Example 1: CAN Bus Provider Service
-
-```json
-{
-  "target": "vip",
-  "platform": "linux/arm64",
-  "dockerImageURL": "ghcr.io/eclipse-autowrx/dk_service_can_provider:latest",
-  "runtimeCfg": {
-    "CAN_PORT": "can1",
-    "MAPPING_FILE": "mapping/vss_4.0/vss_dbc.json",
-    "KUKSA_ADDRESS": "192.168.56.48"
-  }
-}
-```
-
-#### Example 2: HVAC Control Service
-
-```json
-{
-  "target": "cabin-control-unit",
-  "platform": "linux/arm64",
-  "dockerImageURL": "ghcr.io/your-org/hvac-controller:latest",
-  "runtimeCfg": {
-    "SDV_MIDDLEWARE_TYPE": "native",
-    "SDV_VEHICLEDATABROKER_ADDRESS": "grpc://localhost:55555",
-    "SDV_MQTT_ADDRESS": "mqtt://localhost:1883",
-    "AI_MODEL_ENDPOINT": "http://ai-service:8080"
-  },
-  "vssSignals": {
-    "required": [
-      {"path": "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed", "access": "write"},
-      {"path": "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed", "access": "write"}
-    ]
-  }
-}
-```
+### Configuration
+- **Public Image:** `ghcr.io/eclipse-autowrx/dreampack-hvac-app:latest`
+- **Target Node:** `xip`
+- **Platform:** `linux/arm64`
+- **Runtime Config:** Production settings
 
 ---
 
@@ -599,10 +526,12 @@ dreampack-hvac-app/
 
 ### Validation Rules
 
-1. **VSS Signal Validation**: Every signal used in code MUST exist in system VSS model
+1. **VSS Signal Validation**: Every signal used in code MUST exist in system VSS model (if VSS model is available)
 2. **Access Validation**: Detected access type is recorded (read/write/readwrite)
-3. **Build Failure**: If any signal is invalid, build stops with error listing invalid signals
-4. **Manifest Generation**: Only validated signals are written to AppManifest.json
+3. **Build Behavior**:
+   - **With VSS model**: Build stops with error if any signal is invalid
+   - **Without VSS model**: Build continues with warning, skipping validation
+4. **Manifest Generation**: All detected signals are written to AppManifest.json (validated or not)
 
 ---
 
@@ -632,10 +561,24 @@ APP_MANIFEST_PATH="./app/AppManifest.json"
 
 ## 🐛 Troubleshooting
 
-### Build fails with "VSS model not found"
+### VSS model not found (Warning)
 
+If no VSS model is found, the build will continue with a warning:
+
+```
+WARNING: VSS model not found at ~/.dk/sdv-runtime/vss.json
+Skipping VSS signal validation...
+```
+
+**What happens:**
+- Build continues without VSS signal validation
+- AppManifest.json is still updated with detected signals
+- Docker image is built successfully
+- VSS signals are not validated against system model
+
+**To enable VSS validation:**
 ```bash
-# Check VSS model exists
+# Ensure VSS model exists
 ls ~/.dk/sdv-runtime/vss.json
 
 # If missing, download or generate VSS model
@@ -662,14 +605,14 @@ docker logs dreampack-hvac-app
 # 3. Python syntax errors in main.py
 ```
 
-### Connection refused to databroker
+### Connection refused to databroker / mqtt-broker
 
 ```bash
 # Verify databroker is running
 netstat -tlnp | grep 55555
 
-# Check databroker address matches
-echo $SDV_VEHICLEDATABROKER_ADDRESS
+# Verify mqtt-broker is running
+netstat -tlnp | grep 1883
 ```
 
 ---
@@ -679,12 +622,6 @@ echo $SDV_VEHICLEDATABROKER_ADDRESS
 - [Eclipse Velocitas Documentation](https://eclipse.dev/velocitas/)
 - [VSS Specification](https://covesa.github.io/vehicle_signal_specification/)
 - [KUKSA Databroker](https://github.com/eclipse/kuksa.val/tree/master/kuksa_databroker)
-
----
-
-## 📝 License
-
-Apache License 2.0 - See LICENSE file for details
 
 ---
 

@@ -31,43 +31,19 @@ class TestApp(VehicleApp):
 
     async def on_start(self):
         # Print demo banner and description
-        logger.info("=" * 80)
-        logger.info("🤖 AI-POWERED HVAC CONTROL DEMO")
-        logger.info("=" * 80)
-        logger.info("Goal & AI Interaction:")
-        logger.info("  This demo simulates an AI assistant responding to user voice")
-        logger.info("  commands for climate control. The QM app reacts to AI decisions")
-        logger.info("  and automatically adjusts HVAC fan speeds accordingly.")
-        logger.info("")
-        logger.info("Real-world Scenario:")
-        logger.info("  👤 User: 'Hey AI, I'm feeling hot, can you turn up the AC?'")
-        logger.info("  🤖 AI: 'Sure! Increasing fan speed to cool you down.'")
-        logger.info("  ⚙️  QM App: Receives AI command → Sets fan speed to 80%")
-        logger.info("")
-        logger.info("  👤 User: 'It's too cold now, reduce the airflow please.'")
-        logger.info("  🤖 AI: 'Of course! Reducing fan speed for your comfort.'")
-        logger.info("  ⚙️  QM App: Receives AI command → Sets fan speed to 30%")
-        logger.info("")
-        logger.info("VSS Signals Controlled:")
-        logger.info("  • Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed")
-        logger.info("  • Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed")
-        logger.info("")
         logger.info("Demo Simulation:")
         logger.info("  • Simulates various AI-driven climate adjustment scenarios")
         logger.info("  • Shows different fan speed levels based on user comfort needs")
         logger.info("  • Demonstrates intelligent HVAC control through voice commands")
         logger.info("  • Range: 0-100% (percentage of maximum fan speed)")
-        logger.info("")
-        logger.info("Starting AI-powered climate control simulation...")
-        logger.info("=" * 80)
         
         await asyncio.sleep(3)
         
         ai_scenarios = [
             {"speed": 0, "context": "AI: 'Turning off AC as requested - fresh air mode activated'"},
-            {"speed": 25, "context": "AI: 'Setting gentle breeze for comfortable reading'"},
+            {"speed": 20, "context": "AI: 'Setting gentle breeze for comfortable reading'"},
             {"speed": 50, "context": "AI: 'Moderate cooling for normal driving comfort'"},
-            {"speed": 75, "context": "AI: 'Increasing airflow - detected warm weather outside'"},
+            {"speed": 80, "context": "AI: 'Increasing airflow - detected warm weather outside'"},
             {"speed": 100, "context": "AI: 'Maximum cooling - hot day detected, cooling cabin quickly'"},
             {"speed": 40, "context": "AI: 'Reducing to comfortable level - target temperature reached'"}
         ]
