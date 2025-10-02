@@ -105,10 +105,12 @@ show_usage() {
     echo
     
     echo -e "${WHITE}${BOLD}Software Update Mode:${NC}"
-    echo -e "${CYAN}  When swupdate=true, only steps 10-12 are executed:${NC}"
+    echo -e "${CYAN}  When swupdate=true, only steps 10-14 are executed:${NC}"
     echo -e "${DIM}  - Step 10: SDV Runtime update${NC}"
-    echo -e "${DIM}  - Step 11: DreamKit Manager update${NC}"
-    echo -e "${DIM}  - Step 12: IVI Interface update (if dk_ivi=true)${NC}"
+    echo -e "${DIM}  - Step 11: MQTT Broker update${NC}"
+    echo -e "${DIM}  - Step 12: DreamKit Manager update${NC}"
+    echo -e "${DIM}  - Step 13: IVI Interface update (if dk_ivi=true)${NC}"
+    echo -e "${DIM}  - Step 14: K3s Cluster Information${NC}"
     echo
     echo -e "${CYAN}${BOLD}════════════════════════════════════════════════════════════════════════\n"
 }
@@ -645,9 +647,35 @@ perform_software_updates() {
     apply_manifest_with_force_update "sdv-runtime.yaml" "sdv-runtime" "${DOCKER_HUB_NAMESPACE}/sdv-runtime:latest"
 
     ###############################################################################
-    # Step 11   DreamKit Manager
+    # Step 11   MQTT Broker (conditional - only in update mode)
     ###############################################################################
-    step_num=$((11 - step_offset))
+    if [[ "$update_mode" == "update" ]]; then
+        step_num=$((11 - step_offset))
+        show_step $step_num "MQTT Broker Update" "Updating MQTT broker service"
+
+        # Pull latest image first
+        apply_manifest mqtt-broker-pull.yaml
+        run_with_feedback \
+            "sudo kubectl wait --for=condition=complete job/mqtt-broker-pull --timeout=600s" \
+            "Latest MQTT broker image pulled" \
+            "MQTT broker image pull failed" \
+            false \
+            true
+
+        # Clean up pull job
+        run_with_feedback \
+            "sudo kubectl delete job mqtt-broker-pull --ignore-not-found" \
+            "Pull job cleaned up" \
+            "Cleanup completed"
+
+        # Apply with force update
+        apply_manifest_with_force_update "mqtt-broker.yaml" "mqtt-broker" "eclipse-mosquitto:2.0.14"
+    fi
+
+    ###############################################################################
+    # Step 12   DreamKit Manager
+    ###############################################################################
+    step_num=$((12 - step_offset))
     if [[ "$update_mode" == "update" ]]; then
         show_step $step_num "DreamKit Manager Update" "Updating core management services"
     else
@@ -673,10 +701,10 @@ perform_software_updates() {
     apply_manifest_with_force_update "dk-manager.yaml" "dk-manager" "${DOCKER_HUB_NAMESPACE}/dk-manager:latest"
 
     ###############################################################################
-    # Step 12   IVI Interface (conditional)
+    # Step 13   IVI Interface (conditional)
     ###############################################################################
     if [[ "$dk_ivi_value" == "true" ]]; then
-        step_num=$((12 - step_offset))
+        step_num=$((13 - step_offset))
         if [[ "$update_mode" == "update" ]]; then
             show_step $step_num "IVI Interface Update" "Updating In-Vehicle Infotainment system"
         else
@@ -713,9 +741,9 @@ perform_software_updates() {
     fi
 
     ###############################################################################
-    # Step 13   K3s Cluster Information
+    # Step 14   K3s Cluster Information
     ###############################################################################
-    step_num=$((13 - step_offset))
+    step_num=$((14 - step_offset))
     show_step $step_num "K3s Cluster Information" "Displaying node status, images and image IDs"
     show_k3s_cluster_info
 }
@@ -740,11 +768,11 @@ main() {
     if [[ "$swupdate_value" == "true" ]]; then
         type_text "This installer will update your dreamOS software components to the latest versions." 0.01
         echo -e "\n${YELLOW}${BOLD}${ROCKET} Ready to update your dreamOS environment? ${ROCKET}${NC}\n"
-        
+
         # Adjust total steps for software update mode
-        TOTAL_STEPS=3
+        TOTAL_STEPS=5  # SDV Runtime + DreamKit Manager + IVI (optional) + MQTT Broker + K3s Info
         if [[ "$dk_ivi_value" == "false" ]]; then
-            TOTAL_STEPS=2
+            TOTAL_STEPS=4  # Without IVI: SDV Runtime + DreamKit Manager + MQTT Broker + K3s Info
         fi
     else
         type_text "This installer will set up your complete dreamOS environment with all required components." 0.01
@@ -763,12 +791,12 @@ main() {
     # Setup environment variables early
     setup_environment_variables
     
-    # Software update mode - only run steps 10-12
+    # Software update mode - only run steps 10-14
     if [[ "$swupdate_value" == "true" ]]; then
-        show_info "Running in software update mode - executing steps 10-12 only"
-        
+        show_info "Running in software update mode - executing steps 10-14 only"
+
         # Call the new software update function with step offset for proper numbering
-        perform_software_updates 9 "update"  # Offset by 9 to show as steps 1-3
+        perform_software_updates 9 "update"  # Offset by 9 to show as steps 1-5
         
         # Software update completion message
         echo -e "\n${GREEN}${BOLD}Software update completed successfully!${NC}\n"

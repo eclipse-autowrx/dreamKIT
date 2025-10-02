@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-broker
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-broker
+  template:
+    metadata:
+      labels:
+        app: mqtt-broker
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: xip
+      hostNetwork: true
+      restartPolicy: Always
+
+      containers:
+      - name: mqtt-broker
+        image: eclipse-mosquitto:2.0.14
+        imagePullPolicy: IfNotPresent
+
+        args:
+          - mosquitto
+          - -c
+          - /mosquitto-no-auth.conf
+
+        ports:
+        - containerPort: 1883
+          hostPort: 1883
+          name: mqtt
+          protocol: TCP
+        - containerPort: 9001
+          hostPort: 9001
+          name: websocket
+          protocol: TCP
