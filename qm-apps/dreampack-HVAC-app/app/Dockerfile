@@ -47,7 +47,7 @@ WORKDIR /workspace/app/dist
 RUN staticx main run-exe
 
 # Runner stage, to copy the executable
-FROM scratch
+FROM alpine:latest
 
 COPY --from=builder ./workspace/app/dist/run-exe /dist/
 

@@ -228,7 +228,7 @@ PRODUCTION PHASE (Marketplace Deployment)
 │  │    "Platform": "linux/arm64",                              │   │
 │  │    "DockerImageURL": "ghcr.io/.../app:latest",             │   │
 │  │    "RuntimeCfg": {                                         │   │
-│  │      "SDV_MIDDLEWARE_TYPE", "native",                      │   │
+│  │      "SDV_MIDDLEWARE_TYPE": "native",                      │   │
 │  │      "SDV_VEHICLEDATABROKER_ADDRESS": "grpc://127.0.0.1:55555", │   │
 │  │      "SDV_MQTT_ADDRESS": "mqtt://127.0.0.1:1883"           │   │
 │  │    }                                                       │   │
