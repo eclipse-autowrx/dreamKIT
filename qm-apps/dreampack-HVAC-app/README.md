@@ -39,18 +39,21 @@ This template provides an end-to-end solution for developing vehicle application
 
 1️⃣  DEFINE USE CASE
    ┌─────────────────────────────────────────────┐
-   │ Example: Read Vehicle.Speed and log values  │
-   │ Or: Control HVAC FanSpeed via AI commands   │
+   │ Current: AI-powered HVAC climate control    │
+   │ Controls fan speed based on AI scenarios    │
    └─────────────────────────────────────────────┘
                           ↓
 2️⃣  WRITE APPLICATION LOGIC
-   ┌─────────────────────────────────────────────┐
-   │ File: app/src/main.py                       │
-   │                                             │
-   │ • Use: self.Vehicle.Speed.get()     [READ] │
-   │ • Use: self.Vehicle.*.FanSpeed.set() [WRITE]│
-   │ • Optional: publish_event()/subscribe()     │
-   └─────────────────────────────────────────────┘
+   ┌─────────────────────────────────────────────────────────────┐
+   │ File: app/src/main.py                                       │
+   │                                                             │
+   │ • TestApp class with on_start() method                      │
+   │ • Uses: self.Vehicle.Cabin.HVAC.Station.Row1.Driver.        │
+   │         FanSpeed.set()                              [WRITE] │
+   │ • Uses: self.Vehicle.Cabin.HVAC.Station.Row1.Passenger.     │
+   │         FanSpeed.set()                              [WRITE] │
+   │ • Optional: publish_event()/subscribe()                     │
+   └─────────────────────────────────────────────────────────────┘
                           ↓
 3️⃣  BUILD SYSTEM (./build.sh)
    ┌──────────────────────────────────────────────────────────────┐
@@ -64,12 +67,16 @@ This template provides an end-to-end solution for developing vehicle application
    │ PROCESSING LOGIC                                            │
    │ ┌────────────────────────────────────────────────────────┐ │
    │ │ 1. Parse System VSS Model                              │ │
-   │ │    • Extract all available signals (723+ signals)      │ │
+   │ │    • Extract all available signals                     │ │
    │ │    • Build validation dictionary                       │ │
    │ │                                                        │ │
-   │ │ 2. Analyze Application Code                            │ │
+   │ │ 2. Analyze Application Code (main.py)                  │ │
    │ │    • Detect: self.Vehicle.*.get()  → READ access       │ │
    │ │    • Detect: self.Vehicle.*.set()  → WRITE access      │ │
+   │ │    • Found: Vehicle.Cabin.HVAC.Station.Row1.Driver.    │ │
+   │ │             FanSpeed → WRITE                           │ │
+   │ │    • Found: Vehicle.Cabin.HVAC.Station.Row1.Passenger. │ │
+   │ │             FanSpeed → WRITE                           │ │
    │ │    • Detect: subscribe()/publish() → Pubsub topics     │ │
    │ │                                                        │ │
    │ │ 3. Validate Signals                                    │ │
@@ -84,13 +91,13 @@ This template provides an end-to-end solution for developing vehicle application
    │ │                                                        │ │
    │ │ 5. Build Docker Image                                  │ │
    │ │    • Image name: <parent-folder-name>:latest           │ │
-   │ │    • Example: vehicle-app-python-template:latest       │ │
+   │ │    • Example: dreampack-hvac-app:latest                │ │
    │ └────────────────────────────────────────────────────────┘ │
    │                                ↓                             │
    │ OUTPUT                                                       │
    │ ┌──────────────────────────────────────────────────────────┐│
    │ │ ✅ Updated app/AppManifest.json                          ││
-   │ │ ✅ Docker Image: vehicle-app-python-template:latest      ││
+   │ │ ✅ Docker Image: dreampack-hvac-app:latest               ││
    │ └──────────────────────────────────────────────────────────┘│
    └──────────────────────────────────────────────────────────────┘
                           ↓
@@ -136,8 +143,9 @@ DEVELOPMENT PHASE
 │                 │         │ ~/.dk/sdv-runtime/ │
 │  Writes Code:   │         │      vss.json      │
 │  main.py        │         │                    │
-└────────┬────────┘         │   (723 signals)    │
-         │                  └──────────┬─────────┘
+│                 │         │                    │
+│ (TestApp class) │         │   (VSS signals)    │
+└────────┬────────┘         └──────────┬─────────┘
          │                             │
          └──────────┬──────────────────┘
                     ↓
@@ -151,12 +159,13 @@ DEVELOPMENT PHASE
          │  5. Build Docker     │
          └──────────┬───────────┘
                     ↓
-         ┌──────────────────────┐
-         │   ARTIFACTS          │
-         │                      │
-         │ • AppManifest.json   │
-         │ • Docker Image       │
-         └──────────────────────┘
+         ┌──────────────────────────┐
+         │   ARTIFACTS              │
+         │                          │
+         │ • AppManifest.json       │
+         │ • Docker Image:          │
+         │   dreampack-hvac-app     │
+         └──────────────────────────┘
 
 
 RUNTIME PHASE (Local Testing)
@@ -203,7 +212,7 @@ PRODUCTION PHASE (Marketplace Deployment)
 │                    Container Registry                            │
 │              (ghcr.io / Docker Hub)                             │
 │                                                                  │
-│   ghcr.io/your-org/vehicle-app-python-template:latest           │
+│   ghcr.io/your-org/dreampack-hvac-app:latest                    │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │
                                 │ Pull Image
@@ -215,12 +224,13 @@ PRODUCTION PHASE (Marketplace Deployment)
 │  ┌───────────────────────────────────────────────────────────┐   │
 │  │  Runtime Configuration (from Marketplace)                  │   │
 │  │  {                                                         │   │
-│  │    "Target": "vip",                                        │   │
+│  │    "Target": "xip",                                        │   │
 │  │    "Platform": "linux/arm64",                              │   │
 │  │    "DockerImageURL": "ghcr.io/.../app:latest",             │   │
 │  │    "RuntimeCfg": {                                         │   │
-│  │      "SDV_VEHICLEDATABROKER_ADDRESS": "grpc://...",        │   │
-│  │      "SDV_MQTT_ADDRESS": "mqtt://..."                      │   │
+│  │      "SDV_MIDDLEWARE_TYPE", "native",                      │   │
+│  │      "SDV_VEHICLEDATABROKER_ADDRESS": "grpc://127.0.0.1:55555", │   │
+│  │      "SDV_MQTT_ADDRESS": "mqtt://127.0.0.1:1883"           │   │
 │  │    }                                                       │   │
 │  │  }                                                         │   │
 │  └───────────────────────────────────────────────────────────┘   │
@@ -265,33 +275,34 @@ vim app/src/main.py
 
 Edit `app/src/main.py` with your vehicle application code.
 
-#### Example 1: Read Vehicle Speed
+#### Example 1: HVAC Climate Control (Current Implementation)
 
 ```python
 from vehicle import Vehicle, vehicle
 from velocitas_sdk.vehicle_app import VehicleApp
 
-class SpeedMonitor(VehicleApp):
+class HVACController(VehicleApp):
     def __init__(self, vehicle_client: Vehicle):
         super().__init__()
         self.Vehicle = vehicle_client
 
+    async def on_start(self):
+        # AI-powered HVAC control - sets fan speed based on scenarios
+        # Detected as WRITE access to HVAC fan speed signals
+        await self.Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed.set(75)
+        await self.Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed.set(75)
+```
+
+#### Example 2: Read Vehicle Speed (Alternative)
+
+```python
+class SpeedMonitor(VehicleApp):
     async def on_start(self):
         while True:
             # This will be detected as READ access to Vehicle.Speed
             speed = await self.Vehicle.Speed.get()
             print(f"Current speed: {speed.value} km/h")
             await asyncio.sleep(5)
-```
-
-#### Example 2: Control HVAC System
-
-```python
-class HVACController(VehicleApp):
-    async def on_start(self):
-        # These will be detected as WRITE access
-        await self.Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed.set(75)
-        await self.Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed.set(75)
 ```
 
 #### Example 3: Pubsub Messaging
@@ -330,8 +341,8 @@ class MessagingApp(VehicleApp):
          "config": {
            "datapoints": {
              "required": [
-               {"path": "Vehicle.Speed", "access": "read"},
-               {"path": "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed", "access": "write"}
+               {"path": "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed", "access": "write"},
+               {"path": "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed", "access": "write"}
              ]
            }
          }
@@ -356,8 +367,12 @@ class MessagingApp(VehicleApp):
 ✓ Extracted VSS signal usage from main.py
 [
   {
-    "path": "Vehicle.Speed",
-    "access": "read"
+    "path": "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed",
+    "access": "write"
+  },
+  {
+    "path": "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed",
+    "access": "write"
   }
 ]
 ✓ Extracted pubsub topics
@@ -365,7 +380,7 @@ class MessagingApp(VehicleApp):
   Writes: []
 ✓ All VSS signals are valid
 ✓ Updated AppManifest.json
-✓ Successfully built Docker image: vehicle-app-python-template:latest
+✓ Successfully built Docker image: dreampack-hvac-app:latest
 ```
 
 ### Step 3: Local Testing
@@ -378,7 +393,7 @@ class MessagingApp(VehicleApp):
 LOG_DURATION=60 ./start.sh
 
 # Custom databroker address
-SDV_VEHICLEDATABROKER_ADDRESS=grpc://192.168.1.100:55555 ./start.sh
+SDV_VEHICLEDATABROKER_ADDRESS=grpc://192.168.56.48:55555 ./start.sh
 ```
 
 **What `start.sh` does:**
@@ -393,16 +408,16 @@ SDV_VEHICLEDATABROKER_ADDRESS=grpc://192.168.1.100:55555 ./start.sh
 
 ```bash
 # View live logs
-docker logs -f vehicle-app-python-template
+docker logs -f dreampack-hvac-app
 
 # Stop and remove container
 ./stop.sh
 
 # Check container status
-docker ps | grep vehicle-app-python-template
+docker ps | grep dreampack-hvac-app
 
 # View container resource usage
-docker stats vehicle-app-python-template
+docker stats dreampack-hvac-app
 ```
 
 ### Step 4: Stop Your Application
@@ -427,7 +442,7 @@ Once your application is tested locally, deploy it to production nodes via the m
 
 ```bash
 # Tag your image for registry
-IMAGE_NAME="vehicle-app-python-template"
+IMAGE_NAME="dreampack-hvac-app"
 REGISTRY="ghcr.io/your-organization"
 VERSION="v1.0.0"
 
@@ -445,12 +460,12 @@ Create a deployment descriptor JSON file:
 
 ```json
 {
-  "name": "Vehicle Speed Monitor",
-  "description": "Monitors and logs vehicle speed from VSS databroker",
+  "name": "AI-Powered HVAC Control",
+  "description": "AI-driven climate control with automated HVAC fan speed adjustment",
   "version": "1.0.0",
   "target": "vip",
   "platform": "linux/arm64",
-  "dockerImageURL": "ghcr.io/your-organization/vehicle-app-python-template:latest",
+  "dockerImageURL": "ghcr.io/your-organization/dreampack-hvac-app:latest",
   "runtimeCfg": {
     "SDV_MIDDLEWARE_TYPE": "native",
     "SDV_VEHICLEDATABROKER_ADDRESS": "grpc://192.168.56.48:55555",
@@ -462,7 +477,8 @@ Create a deployment descriptor JSON file:
   },
   "vssSignals": {
     "required": [
-      {"path": "Vehicle.Speed", "access": "read"}
+      {"path": "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed", "access": "write"},
+      {"path": "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed", "access": "write"}
     ]
   }
 }
@@ -496,10 +512,10 @@ curl -X POST https://marketplace.example.com/api/apps \
 ```bash
 # Check deployment status on target node
 ssh target-node
-docker ps | grep vehicle-app-python-template
+docker ps | grep dreampack-hvac-app
 
 # View application logs on target
-docker logs -f vehicle-app-python-template
+docker logs -f dreampack-hvac-app
 ```
 
 ### Production Configuration Examples
@@ -546,7 +562,7 @@ docker logs -f vehicle-app-python-template
 ## 📁 Project Structure
 
 ```
-vehicle-app-python-template/
+dreampack-hvac-app/
 ├── app/
 │   ├── src/
 │   │   └── main.py              # Your application logic
@@ -568,8 +584,8 @@ vehicle-app-python-template/
 
 | Pattern in Code | Detected As | Access Type |
 |----------------|-------------|-------------|
+| `self.Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed.set(value)` | `Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed` | `write` |
 | `self.Vehicle.Speed.get()` | `Vehicle.Speed` | `read` |
-| `self.Vehicle.*.FanSpeed.set(value)` | `Vehicle.*.FanSpeed` | `write` |
 | Both `.get()` and `.set()` on same signal | Signal path | `readwrite` |
 
 ### Pubsub Topic Detection Rules
@@ -638,7 +654,7 @@ ERROR: Invalid VSS signals detected:
 
 ```bash
 # Check container logs
-docker logs vehicle-app-python-template
+docker logs dreampack-hvac-app
 
 # Common issues:
 # 1. Databroker not running
