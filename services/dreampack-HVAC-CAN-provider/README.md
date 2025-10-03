@@ -197,6 +197,14 @@ Generated `dbc_default_values.json`:
 Complete example with multiple signal types:
 
 ```yaml
+# Sensor: Vehical Speed (float with direct mapping)
+Vehicle.Speed:
+  type: sensor
+  datatype: float
+  dbc2vss:
+    signal: DI_uiSpeed          # CAN signal from ModelCAN.dbc
+    interval_ms: 500            # Update every 0.5 seconds
+
 # Actuator: Low Beam Headlights (boolean with enum mapping)
 Vehicle.Body.Lights.Beam.Low.IsOn:
   type: actuator
