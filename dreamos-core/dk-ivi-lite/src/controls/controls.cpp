@@ -89,32 +89,16 @@ ControlsAsync::ControlsAsync()
     lastKnownConnectionState = true;
     emit connectionStateChanged(true);
 
-    // 3) Now subscribe to *target*‐value updates.
+    // 3) Now subscribe to both *current* and *target* value updates.
     //    Our SubscribeCallback signature is:
     //      (const std::string &path,
     //       const std::string &value,
     //       const int         &field)
     //
-    //    We ignore the ‘field’ here (always target).  Because
-    //    subscribeTarget() will spawn its own thread, we must
-    //    marshal back to the Qt main thread:
-    VAPI_CLIENT.subscribeTarget(
-      DK_VAPI_DATABROKER,
-      signalPaths,
-      [this](const std::string &path,
-             const std::string &value,
-             const int         &field) {
-        Q_UNUSED(field);
-        // invoke our member function in the GUI thread:
-        QMetaObject::invokeMethod(
-          this,
-          [this, path, value]() {
-            this->vssSubsribeCallback(path, value);
-          },
-          Qt::QueuedConnection
-        );
-      }
-    );
+    //    We need both subscriptions so the UI can display real-time vehicle status.
+    //    The lambda captures are fixed to avoid use-after-free issues.
+
+    // Subscribe to current values (actual vehicle state)
     VAPI_CLIENT.subscribeCurrent(
       DK_VAPI_DATABROKER,
       signalPaths,
@@ -122,11 +106,36 @@ ControlsAsync::ControlsAsync()
              const std::string &value,
              const int         &field) {
         Q_UNUSED(field);
+        // Make copies of the strings to avoid use-after-free
+        std::string pathCopy = path;
+        std::string valueCopy = value;
         // invoke our member function in the GUI thread:
         QMetaObject::invokeMethod(
           this,
-          [this, path, value]() {
-            this->vssSubsribeCallback(path, value);
+          [this, pathCopy, valueCopy]() {
+            this->vssSubsribeCallback(pathCopy, valueCopy);
+          },
+          Qt::QueuedConnection
+        );
+      }
+    );
+
+    // Subscribe to target values (commanded/desired state)
+    VAPI_CLIENT.subscribeTarget(
+      DK_VAPI_DATABROKER,
+      signalPaths,
+      [this](const std::string &path,
+             const std::string &value,
+             const int         &field) {
+        Q_UNUSED(field);
+        // Make copies of the strings to avoid use-after-free
+        std::string pathCopy = path;
+        std::string valueCopy = value;
+        // invoke our member function in the GUI thread:
+        QMetaObject::invokeMethod(
+          this,
+          [this, pathCopy, valueCopy]() {
+            this->vssSubsribeCallback(pathCopy, valueCopy);
           },
           Qt::QueuedConnection
         );
@@ -486,61 +495,21 @@ void ControlsAsync::handleConnectionRestored()
 
 void ControlsAsync::reestablishSubscriptions()
 {
-    qInfo() << "Re-establishing subscriptions";
+    qInfo() << "Re-establishing subscriptions after reconnection";
 
-    // Build the list of signal paths we want to subscribe to
-    std::vector<std::string> signalPaths = {
-        VehicleAPI::V_Bo_Lights_Beam_Low_IsOn,
-        VehicleAPI::V_Bo_Lights_Beam_High_IsOn,
-        VehicleAPI::V_Bo_Lights_Hazard_IsSignaling,
-        VehicleAPI::V_Ca_Seat_R1_DriverSide_Position,
-        VehicleAPI::V_Ca_HVAC_Station_R1_Driver_FanSpeed,
-        VehicleAPI::V_Ca_HVAC_Station_R1_Passenger_FanSpeed
-    };
+    // DON'T create new subscriptions here!
+    // The subscribeWithReconnect() mechanism in KuksaClient automatically
+    // re-establishes subscriptions when the connection is restored.
+    // Creating new subscriptions would spawn duplicate threads and cause failures.
 
-    // Re-subscribe to target values
-    VAPI_CLIENT.subscribeTarget(
-      DK_VAPI_DATABROKER,
-      signalPaths,
-      [this](const std::string &path,
-             const std::string &value,
-             const int         &field) {
-        Q_UNUSED(field);
-        // invoke our member function in the GUI thread:
-        QMetaObject::invokeMethod(
-          this,
-          [this, path, value]() {
-            this->vssSubsribeCallback(path, value);
-          },
-          Qt::QueuedConnection
-        );
-      }
-    );
-
-    // Re-subscribe to current values
-    VAPI_CLIENT.subscribeCurrent(
-      DK_VAPI_DATABROKER,
-      signalPaths,
-      [this](const std::string &path,
-             const std::string &value,
-             const int         &field) {
-        Q_UNUSED(field);
-        // invoke our member function in the GUI thread:
-        QMetaObject::invokeMethod(
-          this,
-          [this, path, value]() {
-            this->vssSubsribeCallback(path, value);
-          },
-          Qt::QueuedConnection
-        );
-      }
-    );
-
+    // Just mark subscriptions as active and refresh values
     subscriptionsActive = true;
     emit subscriptionsRestored();
 
-    // Refresh current values after re-subscription
-    QTimer::singleShot(500, this, &ControlsAsync::init);
+    // Refresh current values from the databroker after reconnection
+    // This ensures the UI reflects the latest state
+    qInfo() << "Refreshing values from databroker after reconnection";
+    QTimer::singleShot(1000, this, &ControlsAsync::init);
 }
 
 void ControlsAsync::enableAutoReconnection()
