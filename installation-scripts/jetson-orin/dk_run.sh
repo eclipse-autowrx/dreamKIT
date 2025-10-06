@@ -194,7 +194,7 @@ start_core_services() {
 check_ivi_availability() {
     show_info "Checking IVI interface availability..."
     
-    if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "^ghcr.io/samtranbosch/dk_ivi:latest$"; then
+    if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "^danh22/dk_ivi:latest$"; then
         show_success "IVI interface image found"
         return 0
     else
@@ -235,7 +235,7 @@ start_ivi() {
             -e DK_DOCKER_HUB_NAMESPACE="$DOCKER_HUB_NAMESPACE" \
             -e DK_ARCH="$ARCH" \
             -e DK_CONTAINER_ROOT="/app/.dk/" \
-            ghcr.io/samtranbosch/dk_ivi:latest >/dev/null 2>&1
+            danh22/dk_ivi:latest >/dev/null 2>&1
     else
         show_info "Standard hardware detected - using generic configuration"
         docker run -d -it --name dk_ivi \
@@ -253,7 +253,7 @@ start_ivi() {
             -e DK_DOCKER_HUB_NAMESPACE="$DOCKER_HUB_NAMESPACE" \
             -e DK_ARCH="$ARCH" \
             -e DK_CONTAINER_ROOT="/app/.dk/" \
-            ghcr.io/samtranbosch/dk_ivi:latest >/dev/null 2>&1
+            danh22/dk_ivi:latest >/dev/null 2>&1
     fi
     
     # Verify IVI started successfully
