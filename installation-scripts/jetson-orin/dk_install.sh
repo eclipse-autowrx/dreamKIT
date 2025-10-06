@@ -105,12 +105,10 @@ show_usage() {
     echo
     
     echo -e "${WHITE}${BOLD}Software Update Mode:${NC}"
-    echo -e "${CYAN}  When swupdate=true, only steps 10-14 are executed:${NC}"
+    echo -e "${CYAN}  When swupdate=true, only steps 10-12 are executed:${NC}"
     echo -e "${DIM}  - Step 10: SDV Runtime update${NC}"
-    echo -e "${DIM}  - Step 11: MQTT Broker update${NC}"
-    echo -e "${DIM}  - Step 12: DreamKit Manager update${NC}"
-    echo -e "${DIM}  - Step 13: IVI Interface update (if dk_ivi=true)${NC}"
-    echo -e "${DIM}  - Step 14: K3s Cluster Information${NC}"
+    echo -e "${DIM}  - Step 11: DreamKit Manager update${NC}"
+    echo -e "${DIM}  - Step 12: IVI Interface update (if dk_ivi=true)${NC}"
     echo
     echo -e "${CYAN}${BOLD}════════════════════════════════════════════════════════════════════════\n"
 }
@@ -120,18 +118,19 @@ show_banner() {
     clear
     echo -e "${PURPLE}${BOLD}"
     cat << "EOF"
-    ╔══════════════════════════════════════════════════════════════════════╗
-    ║                                                                      ║
-    ║    ████████╗ ██████╗  ███████╗  █████╗  ███╗   ███╗  ██████╗ ███████╗║
-    ║    ██╔═══██║██╔══██╗ ██╔════╝ ██╔══██╗ ████╗ ████║ ██╔═══██╗██╔════╝║
-    ║    ██║   ██║██████╔╝ █████╗   ███████║ ██╔████╔██║ ██║   ██║███████╗║
-    ║    ██║   ██║██╔══██╗ ██╔══╝   ██╔══██║ ██║╚██╔╝██║ ██║   ██║╚════██║║
-    ║    ████████║██║  ██║ ███████╗ ██║  ██║ ██║ ╚═╝ ██║ ╚██████╔╝███████║║
-    ║    ╚═══════╝╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═╝     ╚═╝  ╚═════╝ ╚══════╝║
-    ║                                                                      ║
-    ║                    Professional Installation Suite                   ║
-    ║                    --> Version 2.0 - K3s Deployment                  ║
-    ╚══════════════════════════════════════════════════════════════════════╝
+    ╔═══════════════════════════════════════════════════════════════════════════╗
+    ║                                                                           ║
+    ║    ████████╗ ██████╗  ███████╗  █████╗  ███╗   ███╗  ██████╗  ███████╗    ║
+    ║    ██╔═══██║ ██╔══██╗ ██╔════╝ ██╔══██╗ ████╗ ████║ ██╔═══██╗ ██╔════╝    ║
+    ║    ██║   ██║ ██████╔╝ █████╗   ███████║ ██╔████╔██║ ██║   ██║ ███████╗    ║
+    ║    ██║   ██║ ██╔══██╗ ██╔══╝   ██╔══██║ ██║╚██╔╝██║ ██║   ██║ ╚════██║    ║
+    ║    ████████║ ██║  ██║ ███████╗ ██║  ██║ ██║ ╚═╝ ██║ ╚██████╔╝ ███████║    ║
+    ║    ╚═══════╝ ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═╝     ╚═╝  ╚═════╝  ╚══════╝    ║  
+    ║                                                                           ║
+    ║                    Professional Installation Suite                        ║ 
+    ║                    --> Version 2.0 - K3s Deployment                       ║ 
+    ║                                                                           ║                      
+    ╚═══════════════════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${NC}"
     
@@ -282,10 +281,11 @@ setup_environment_variables() {
     K3S_SHARE_PARAM=" -v /usr/local/bin/kubectl:/usr/local/bin/kubectl:ro -v ~/.kube/config:/root/.kube/config:ro"
     LOG_LIMIT_PARAM="--log-opt max-size=10m --log-opt max-file=3"
     DOCKER_HUB_NAMESPACE="ghcr.io/eclipse-autowrx"
+    DOCKER_HUB_NAMESPACE1="danh22"
     
     # Export variables for use throughout the script
     export DK_USER CURRENT_DIR ARCH RUNTIME_NAME XDG_RUNTIME_DIR HOME_DIR
-    export DOCKER_SHARE_PARAM DOCKER_AUDIO_PARAM K3S_SHARE_PARAM LOG_LIMIT_PARAM DOCKER_HUB_NAMESPACE
+    export DOCKER_SHARE_PARAM DOCKER_AUDIO_PARAM K3S_SHARE_PARAM LOG_LIMIT_PARAM DOCKER_HUB_NAMESPACE DOCKER_HUB_NAMESPACE1
     
     show_info "Environment configured for user: ${BOLD}$DK_USER${NC}"
     show_info "Architecture: ${BOLD}$ARCH${NC} (${ARCH_DETECT})"
@@ -435,7 +435,7 @@ apply_manifest() {
     # -----------------------------------------------------------------
     # make all placeholders available to envsubst
     # -----------------------------------------------------------------
-    export DOCKER_HUB_NAMESPACE ARCH DK_USER RUNTIME_NAME HOME_DIR \
+    export DOCKER_HUB_NAMESPACE ARCH DK_USER RUNTIME_NAME HOME_DIR DOCKER_HUB_NAMESPACE1\
         dk_vip_demo DISPLAY XDG_RUNTIME_DIR
 
     # -----------------------------------------------------------------
@@ -447,7 +447,7 @@ apply_manifest() {
     # Create tmp directory for parsed manifests
     mkdir -p "$tmp_dir"
     
-    local VARS='${DOCKER_HUB_NAMESPACE} ${ARCH} ${DK_USER} ${RUNTIME_NAME} \
+    local VARS='${DOCKER_HUB_NAMESPACE} ${ARCH} ${DK_USER} ${RUNTIME_NAME} ${DOCKER_HUB_NAMESPACE1}\
                 ${HOME_DIR} ${dk_vip_demo} ${DISPLAY} ${XDG_RUNTIME_DIR}'
     
     show_info "Processing manifest: ${BOLD}${yaml}${NC}"
@@ -647,35 +647,9 @@ perform_software_updates() {
     apply_manifest_with_force_update "sdv-runtime.yaml" "sdv-runtime" "${DOCKER_HUB_NAMESPACE}/sdv-runtime:latest"
 
     ###############################################################################
-    # Step 11   MQTT Broker (conditional - only in update mode)
+    # Step 11   DreamKit Manager
     ###############################################################################
-    if [[ "$update_mode" == "update" ]]; then
-        step_num=$((11 - step_offset))
-        show_step $step_num "MQTT Broker Update" "Updating MQTT broker service"
-
-        # Pull latest image first
-        apply_manifest mqtt-broker-pull.yaml
-        run_with_feedback \
-            "sudo kubectl wait --for=condition=complete job/mqtt-broker-pull --timeout=600s" \
-            "Latest MQTT broker image pulled" \
-            "MQTT broker image pull failed" \
-            false \
-            true
-
-        # Clean up pull job
-        run_with_feedback \
-            "sudo kubectl delete job mqtt-broker-pull --ignore-not-found" \
-            "Pull job cleaned up" \
-            "Cleanup completed"
-
-        # Apply with force update
-        apply_manifest_with_force_update "mqtt-broker.yaml" "mqtt-broker" "eclipse-mosquitto:2.0.14"
-    fi
-
-    ###############################################################################
-    # Step 12   DreamKit Manager
-    ###############################################################################
-    step_num=$((12 - step_offset))
+    step_num=$((11 - step_offset))
     if [[ "$update_mode" == "update" ]]; then
         show_step $step_num "DreamKit Manager Update" "Updating core management services"
     else
@@ -701,10 +675,10 @@ perform_software_updates() {
     apply_manifest_with_force_update "dk-manager.yaml" "dk-manager" "${DOCKER_HUB_NAMESPACE}/dk-manager:latest"
 
     ###############################################################################
-    # Step 13   IVI Interface (conditional)
+    # Step 12   IVI Interface (conditional)
     ###############################################################################
     if [[ "$dk_ivi_value" == "true" ]]; then
-        step_num=$((13 - step_offset))
+        step_num=$((12 - step_offset))
         if [[ "$update_mode" == "update" ]]; then
             show_step $step_num "IVI Interface Update" "Updating In-Vehicle Infotainment system"
         else
@@ -728,9 +702,9 @@ perform_software_updates() {
 
         # Decide which manifest to apply and force update
         if [ -f "/etc/nv_tegra_release" ]; then
-            apply_manifest_with_force_update "dk-ivi-jetson.yaml" "dk-ivi" "${DOCKER_HUB_NAMESPACE}/dk_ivi:latest"
+            apply_manifest_with_force_update "dk-ivi-jetson.yaml" "dk-ivi" "${DOCKER_HUB_NAMESPACE1}/dk_ivi:latest"
         else
-            apply_manifest_with_force_update "dk-ivi.yaml" "dk-ivi" "${DOCKER_HUB_NAMESPACE}/dk_ivi:latest"
+            apply_manifest_with_force_update "dk-ivi.yaml" "dk-ivi" "${DOCKER_HUB_NAMESPACE1}/dk_ivi:latest"
         fi
     else
         if [[ "$update_mode" == "update" ]]; then
@@ -741,9 +715,9 @@ perform_software_updates() {
     fi
 
     ###############################################################################
-    # Step 14   K3s Cluster Information
+    # Step 13   K3s Cluster Information
     ###############################################################################
-    step_num=$((14 - step_offset))
+    step_num=$((13 - step_offset))
     show_step $step_num "K3s Cluster Information" "Displaying node status, images and image IDs"
     show_k3s_cluster_info
 }
@@ -768,11 +742,11 @@ main() {
     if [[ "$swupdate_value" == "true" ]]; then
         type_text "This installer will update your dreamOS software components to the latest versions." 0.01
         echo -e "\n${YELLOW}${BOLD}${ROCKET} Ready to update your dreamOS environment? ${ROCKET}${NC}\n"
-
+        
         # Adjust total steps for software update mode
-        TOTAL_STEPS=5  # SDV Runtime + DreamKit Manager + IVI (optional) + MQTT Broker + K3s Info
+        TOTAL_STEPS=3
         if [[ "$dk_ivi_value" == "false" ]]; then
-            TOTAL_STEPS=4  # Without IVI: SDV Runtime + DreamKit Manager + MQTT Broker + K3s Info
+            TOTAL_STEPS=2
         fi
     else
         type_text "This installer will set up your complete dreamOS environment with all required components." 0.01
@@ -791,12 +765,12 @@ main() {
     # Setup environment variables early
     setup_environment_variables
     
-    # Software update mode - only run steps 10-14
+    # Software update mode - only run steps 10-12
     if [[ "$swupdate_value" == "true" ]]; then
-        show_info "Running in software update mode - executing steps 10-14 only"
-
+        show_info "Running in software update mode - executing steps 10-12 only"
+        
         # Call the new software update function with step offset for proper numbering
-        perform_software_updates 9 "update"  # Offset by 9 to show as steps 1-5
+        perform_software_updates 9 "update"  # Offset by 9 to show as steps 1-3
         
         # Software update completion message
         echo -e "\n${GREEN}${BOLD}Software update completed successfully!${NC}\n"
@@ -875,48 +849,49 @@ main() {
     ###############################################################################
     # Step 8   K3s-based installation
     ###############################################################################
-    show_step 8 "K3s-based installation" "k3s master installation & preparation for local registry"
-    sudo DK_USER="$DK_USER" scripts/k3s-master-prepare.sh eth0
-    if [ $? -ne 0 ]; then
-        show_error "Failed to prepare K3s master. Please check the logs."
-        exit 1
-    fi
-    show_success "K3s master prepared successfully"
+    #show_step 8 "K3s-based installation" "k3s master installation & preparation for local registry"
+    #sudo scripts/k3s-master-prepare.sh wlP1p1s0
+    #if [ $? -ne 0 ]; then
+    #    show_error "Failed to prepare K3s master. Please check the logs."
+    #    exit 1
+    #fi
+    #show_success "K3s master prepared successfully"
     
     ###############################################################################
     # Step-9   NXP-S32G setup (k3s-agent & friends) - conditional based on zecu parameter
     ###############################################################################
-    if [[ "$zecu_value" == "true" ]]; then
-        show_step 9 "NXP-S32G setup" "k3s-agent installation & relevant stuff"
+    #if [[ "$zecu_value" == "true" ]]; then
+    #    show_step 9 "NXP-S32G setup" "k3s-agent installation & relevant stuff"
 
-        TARGET_IP="192.168.56.49"
-        PING_COUNT=3      # how many echo-requests we send
-        PING_TIMEOUT=2    # wait time (seconds) for each reply
-
-        show_info "Checking reachability of ECU at ${TARGET_IP} ..."
-
-        if ping -c "${PING_COUNT}" -W "${PING_TIMEOUT}" "${TARGET_IP}" >/dev/null 2>&1; then
-            show_success "ECU reachable."
-            show_info "Proceed with the NXP-S32G setup? [y/N]: "
-        else
-            show_warning "Could NOT reach ${TARGET_IP}. Is the ECU powered on and connected?"
-            show_info "Attempt the NXP-S32G setup anyway? [y/N]: "
-        fi
-
-        read -r nxp_s32g_setup
+    #    TARGET_IP="192.168.56.49"
         
-        if [[ "$nxp_s32g_setup" =~ ^[Yy]$ ]]; then
-            show_info "Calling NXP-S32G setup script..."
-            run_with_feedback "sudo $CURRENT_DIR/scripts/k3s-agent-offline-install.sh" \
-                            "NXP-S32G setup completed" \
-                            "NXP-S32G setup failed"
-        else
-            show_info "NXP-S32G setup skipped (you can run it later with './scripts/k3s-agent-offline-install.sh')"
-        fi
-    else
-        show_info "NXP-S32G (Zonal ECU) setup skipped (zecu=false)"
-        show_info "You can run it later with: sudo ./dk_install.sh zecu=true"
-    fi
+    #    PING_COUNT=3      # how many echo-requests we send
+    #    PING_TIMEOUT=2    # wait time (seconds) for each reply
+
+    #    show_info "Checking reachability of ECU at ${TARGET_IP} ..."
+
+    #    if ping -c "${PING_COUNT}" -W "${PING_TIMEOUT}" "${TARGET_IP}" >/dev/null 2>&1; then
+    #        show_success "ECU reachable."
+    #        show_info "Proceed with the NXP-S32G setup? [y/N]: "
+    #    else
+    #        show_warning "Could NOT reach ${TARGET_IP}. Is the ECU powered on and connected?"
+    #        show_info "Attempt the NXP-S32G setup anyway? [y/N]: "
+    #    fi
+
+    #    read -r nxp_s32g_setup
+        
+    #    if [[ "$nxp_s32g_setup" =~ ^[Yy]$ ]]; then
+    #        show_info "Calling NXP-S32G setup script..."
+    #        run_with_feedback "sudo $CURRENT_DIR/scripts/k3s-agent-offline-install.sh" \
+    #                        "NXP-S32G setup completed" \
+    #                        "NXP-S32G setup failed"
+    #    else
+    #        show_info "NXP-S32G setup skipped (you can run it later with './scripts/k3s-agent-offline-install.sh')"
+    #    fi
+    #else
+    #    show_info "NXP-S32G (Zonal ECU) setup skipped (zecu=false)"
+    #    show_info "You can run it later with: sudo ./dk_install.sh zecu=true"
+    #fi
     
     ###############################################################################
     # Steps 10-12: Software Components - call the new function
@@ -944,6 +919,7 @@ XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR}"
 DOCKER_AUDIO_PARAM="${DOCKER_AUDIO_PARAM}"
 LOG_LIMIT_PARAM="${LOG_LIMIT_PARAM}"
 DOCKER_HUB_NAMESPACE="${DOCKER_HUB_NAMESPACE}"
+DOCKER_HUB_NAMESPACE1="${DOCKER_HUB_NAMESPACE1}"
 dk_ivi_value="${dk_ivi_value}"
 zecu_value="${zecu_value}"
 swupdate_value="${swupdate_value}"
