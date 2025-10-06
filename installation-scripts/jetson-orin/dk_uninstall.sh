@@ -27,7 +27,6 @@ DK_CONTAINER_LIST="dk_manager dk_ivi sdv-runtime dk_appinstallservice"
 echo "Env Variables:"
 echo "HOME_DIR: $HOME_DIR"
 echo "DOCKER_HUB_NAMESPACE: $DOCKER_HUB_NAMESPACE"
-echo "DOCKER_HUB_NAMESPACE1: $DOCKER_HUB_NAMESPACE1"
 
 k3s-killall.sh
 k3s-uninstall.sh

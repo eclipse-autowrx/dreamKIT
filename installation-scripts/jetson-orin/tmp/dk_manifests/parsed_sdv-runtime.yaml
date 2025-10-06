@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdv-runtime
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sdv-runtime
+  template:
+    metadata:
+      labels:
+        app: sdv-runtime
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: xip
+      hostNetwork: true
+      restartPolicy: Always
+
+      containers:
+      - name: sdv-runtime
+        image: ghcr.io/eclipse-autowrx/sdv-runtime:dc1f218806aa00e1a99df23c7e2ed387b0c6da70
+        imagePullPolicy: IfNotPresent
+
+        startupProbe:
+          tcpSocket:
+            port: 55555
+          initialDelaySeconds: 10
+          periodSeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 15
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          failureThreshold: 30
+
+        readinessProbe:
+          tcpSocket:
+            port: 55555
+          initialDelaySeconds: 15
+          periodSeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        livenessProbe:
+          tcpSocket:
+            port: 55555
+          initialDelaySeconds: 20
+          periodSeconds: 15
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        env:
+        - name: USER
+          value: "sdv-runtime"
+        - name: RUNTIME_NAME
+          value: "dreamKIT-c9a3f72c"
+        - name: ARCH
+          value: "arm64"
+        - name: OFFLINE_MODE
+          value: "true"
+
+        ports:
+        - containerPort: 55555
+          hostPort: 55555
+
+        volumeMounts:
+        - name: persistent-storage
+          mountPath: /home/dev/ws/vss.json
+          subPath: vss.json
+
+      volumes:
+      - name: persistent-storage
+        hostPath:
+          path: /home/sdv-runtime/.dk/sdv-runtime
+          type: DirectoryOrCreate
