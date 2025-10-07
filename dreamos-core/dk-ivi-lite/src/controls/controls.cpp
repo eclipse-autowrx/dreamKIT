@@ -26,8 +26,8 @@ namespace VehicleAPI {
   std::string V_Bo_Lights_Beam_Low_IsOn               = "Vehicle.Body.Lights.Beam.Low.IsOn";
   std::string V_Bo_Lights_Beam_High_IsOn              = "Vehicle.Body.Lights.Beam.High.IsOn";
   std::string V_Bo_Lights_Hazard_IsSignaling          = "Vehicle.Body.Lights.Hazard.IsSignaling";
-  std::string V_Ca_HVAC_Station_R1_Driver_FanSpeed    = "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed";
-  std::string V_Ca_HVAC_Station_R1_Passenger_FanSpeed = "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed";
+  std::string V_Ca_HVAC_Station_R1_Driver_FanSpeed    = "Vehicle.Cabin.HVAC.Station.Row1.Driver.FanSpeed";
+  std::string V_Ca_HVAC_Station_R1_Passenger_FanSpeed = "Vehicle.Cabin.HVAC.Station.Row1.Passenger.FanSpeed";
   std::string V_Ca_Seat_R1_DriverSide_Position        = "Vehicle.Cabin.Seat.Row1.DriverSide.Position";
 }
 
