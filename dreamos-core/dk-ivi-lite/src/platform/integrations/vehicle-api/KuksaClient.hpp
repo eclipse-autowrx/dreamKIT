@@ -243,6 +243,9 @@ private:
   };
   std::vector<SubscriptionInfo> activeSubscriptions_;
   std::mutex subscriptionsMutex_;
+
+  // Serialize gRPC Subscribe() calls to prevent concurrent access issues
+  std::mutex subscribeCallMutex_;
 };
 
 } // namespace KuksaClient

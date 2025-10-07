@@ -120,7 +120,10 @@ ControlsAsync::ControlsAsync()
       }
     );
 
-    // Subscribe to target values (commanded/desired state)
+    // TEMPORARY FIX: Disable target subscriptions to reduce from 12 to 6 subscriptions
+    // This prevents "double free or corruption" crash from too many concurrent gRPC streams
+    // TODO: Re-enable after fixing kuksa-databroker-client-library serialization
+    /*
     VAPI_CLIENT.subscribeTarget(
       DK_VAPI_DATABROKER,
       signalPaths,
@@ -141,6 +144,7 @@ ControlsAsync::ControlsAsync()
         );
       }
     );
+    */
     subscriptionsActive = true;
 
     // Start connection monitoring after subscriptions are set up
