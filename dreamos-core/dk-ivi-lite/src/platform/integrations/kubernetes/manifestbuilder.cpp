@@ -201,15 +201,6 @@ spec:
         imagePullPolicy: IfNotPresent
         stdin: true
         tty: true
-        
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "1024Mi"
-            cpu: "300m"
-        
         env:
 ${env}
 ${args_section}
