@@ -174,15 +174,49 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 running: true
 
-                // Custom styling for busy indicator
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: parent.width + 20
-                    height: parent.height + 20
-                    color: "transparent"
-                    border.color: "#00D4AA20"
-                    border.width: 1
-                    radius: width / 2
+                contentItem: Item {
+                    implicitWidth: 60
+                    implicitHeight: 60
+
+                    Item {
+                        id: item
+                        anchors.fill: parent
+                        opacity: startAppBusyIndicator.running ? 1 : 0
+
+                        RotationAnimator {
+                            target: item
+                            running: startAppBusyIndicator.visible && startAppBusyIndicator.running
+                            from: 0
+                            to: 360
+                            loops: Animation.Infinite
+                            duration: 1250
+                        }
+
+                        Repeater {
+                            id: repeater
+                            model: 6
+
+                            Rectangle {
+                                x: item.width / 2 - width / 2
+                                y: item.height / 2 - height / 2
+                                implicitWidth: 10
+                                implicitHeight: 10
+                                radius: 5
+                                color: "#00D4AA"
+                                transform: [
+                                    Translate {
+                                        y: -Math.min(item.width, item.height) * 0.5 + 5
+                                    },
+                                    Rotation {
+                                        angle: index / repeater.count * 360
+                                        origin.x: 5
+                                        origin.y: 5
+                                    }
+                                ]
+                                opacity: 1.0 - index / repeater.count * 0.7
+                            }
+                        }
+                    }
                 }
             }
 

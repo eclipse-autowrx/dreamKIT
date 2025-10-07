@@ -121,6 +121,53 @@ GridView {
                 BusyIndicator {
                     running: visible
                     anchors.centerIn: parent
+                    width: 60
+                    height: 60
+
+                    contentItem: Item {
+                        implicitWidth: 60
+                        implicitHeight: 60
+
+                        Item {
+                            id: busyItem
+                            anchors.fill: parent
+                            opacity: parent.parent.running ? 1 : 0
+
+                            RotationAnimator {
+                                target: busyItem
+                                running: busyItem.parent.parent.visible && busyItem.parent.parent.running
+                                from: 0
+                                to: 360
+                                loops: Animation.Infinite
+                                duration: 1250
+                            }
+
+                            Repeater {
+                                id: busyRepeater
+                                model: 6
+
+                                Rectangle {
+                                    x: busyItem.width / 2 - width / 2
+                                    y: busyItem.height / 2 - height / 2
+                                    implicitWidth: 10
+                                    implicitHeight: 10
+                                    radius: 5
+                                    color: "#00D4AA"
+                                    transform: [
+                                        Translate {
+                                            y: -Math.min(busyItem.width, busyItem.height) * 0.5 + 5
+                                        },
+                                        Rotation {
+                                            angle: index / busyRepeater.count * 360
+                                            origin.x: 5
+                                            origin.y: 5
+                                        }
+                                    ]
+                                    opacity: 1.0 - index / busyRepeater.count * 0.7
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
