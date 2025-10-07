@@ -152,7 +152,7 @@ GridView {
                                     implicitWidth: 10
                                     implicitHeight: 10
                                     radius: 5
-                                    color: "#00D4AA"
+                                    color: "#4A90E2"
                                     transform: [
                                         Translate {
                                             y: -Math.min(busyItem.width, busyItem.height) * 0.5 + 5

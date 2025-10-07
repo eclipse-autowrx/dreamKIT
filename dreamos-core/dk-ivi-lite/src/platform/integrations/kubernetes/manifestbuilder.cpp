@@ -183,7 +183,7 @@ spec:
         kubernetes.io/hostname: ${node}
       hostNetwork: true
       restartPolicy: Always
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 15
       
       tolerations:
       - key: "node.kubernetes.io/unreachable"

@@ -505,7 +505,7 @@ JobManager::JobResult JobManager::performRemoval(const QString &id, const QStrin
         setState(State::Removing, QString("Removing %1").arg(id));
         
         QStringList cleanupCommands;
-        cleanupCommands << QString("kubectl scale deployment %1 --replicas=0 -n default --ignore-not-found").arg(id);
+        cleanupCommands << QString("kubectl delete deployment %1 --ignore-not-found").arg(id);
         cleanupCommands << QString("kubectl wait --for=delete pod -l app=%1 -n default --timeout=30s || true").arg(id);
         cleanupCommands << QString("kubectl delete -f %1 --ignore-not-found --wait=true").arg(deploymentYaml);
         cleanupCommands << QString("kubectl delete job pull-%1 mirror-%1 --ignore-not-found").arg(id);
