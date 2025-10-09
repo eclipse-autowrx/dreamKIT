@@ -604,12 +604,16 @@ Rectangle {
                                 stepSize: 10
                                 to: 100
                                 value: 0
+                                property int lastBackendValue: -1
 
-                                onValueChanged: {
-                                    if (pressed) {
-                                        // Convert percentage to 0-10 range for backend
+                                    
+                                onPressedChanged: {
+                                    if(!pressed){
                                         let backendValue = Math.round(value / 10)
-                                        controlPageAsync.qml_setApi_hvac_driverSide_FanSpeed(backendValue)
+                                        if (backendValue !== lastBackendValue){
+                                            lastBackendValue = backendValue
+                                            controlPageAsync.qml_setApi_hvac_driverSide_FanSpeed(lastBackendValue)
+                                        }
                                     }
                                 }
 
@@ -664,12 +668,15 @@ Rectangle {
                                 stepSize: 10
                                 to: 100
                                 value: 0
-
-                                onValueChanged: {
-                                    if (pressed) {
-                                        // Convert percentage to 0-10 range for backend
+                                property  int lastSent :  -1
+                                
+                                onPressedChanged: {
+                                    if(!pressed){
                                         let backendValue = Math.round(value / 10)
-                                        controlPageAsync.qml_setApi_hvac_passengerSide_FanSpeed(backendValue)
+                                        if (backendValue !== lastSent){
+                                            lastSent = backendValue
+                                            controlPageAsync.qml_setApi_hvac_passengerSide_FanSpeed(lastSent)
+                                        }
                                     }
                                 }
 
