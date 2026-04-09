@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mirror-dk-service-can-provider
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/hostname: xip
+      restartPolicy: Never
+      containers:
+      - name: mirror
+        image: quay.io/containers/skopeo:latest
+        command: ["skopeo","copy"]
+        args:
+          - "--retry-times=3"
+          - "--all"
+          - "--dest-tls-verify=false"
+          - "docker-daemon:dk_service_can_provider:latest"
+          - "docker://192.168.56.48:5000/dk_service_can_provider:latest"
+        volumeMounts:
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+      volumes:
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket

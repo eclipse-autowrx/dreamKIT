@@ -11,12 +11,11 @@
 # start.sh - Start script for dk_service_can_provider
 # Usage: ./start.sh [local|prod] [options]
 
-set -e
 
 # Default values
 ENVIRONMENT=${1:-local}
 IMAGE_NAME="dk_service_can_provider"
-CONTAINER_NAME="dk_service_can_provider"
+CONTAINER_NAME_CAN1="dk_service_can_provider"
 
 # Colors for output
 RED='\033[0;31m'
@@ -73,26 +72,28 @@ start_local() {
         print_info "Make sure kuksa-databroker is running before starting the service"
     fi
     
-    # Stop existing container if running
-    if docker ps -q -f name=${CONTAINER_NAME} | grep -q .; then
-        print_info "Stopping existing container..."
-        docker kill ${CONTAINER_NAME} >/dev/null 2>&1 || true
-        docker rm ${CONTAINER_NAME} >/dev/null 2>&1 || true
-    fi
-    
-    # Start container
-    print_info "Starting dk_service_can_provider container..."
+    # Stop existing containers if running
+    for CNAME in ${CONTAINER_NAME_CAN1}; do
+        if docker ps -q -f name=${CNAME} | grep -q .; then
+            print_info "Stopping existing container: ${CNAME}"
+            docker kill ${CNAME} >/dev/null 2>&1 || true
+            docker rm ${CNAME} >/dev/null 2>&1 || true
+        fi
+        docker rm -f ${CNAME} >/dev/null 2>&1 || true
+    done
+
+    # Start container: dk-service-can1-engine (CAN_PORT=can1)
+    print_info "Starting ${CONTAINER_NAME_CAN1} container (CAN_PORT=can1)..."
     docker run -d -it \
-        --name ${CONTAINER_NAME} \
+        --name ${CONTAINER_NAME_CAN1} \
         --net=host \
         --privileged \
         -e KUKSA_ADDRESS=localhost \
-        -e CAN_PORT=vcan0 \
+        -e CAN_PORT=can1 \
         -e MAPPING_FILE=mapping/vss_4.0/vss_dbc.json \
         -e LOG_LEVEL=INFO \
         ${IMAGE_NAME}:latest
-    
-    print_success "Container started successfully"
+    print_success "Container ${CONTAINER_NAME_CAN1} started"
     
     # Start CAN monitoring in background
     print_info "Starting CAN monitoring (candump vcan0)..."
@@ -102,10 +103,11 @@ start_local() {
     
     # Show container logs
     sleep 2
-    print_info "Container logs:"
-    docker logs ${CONTAINER_NAME}
+    print_info "Container logs (${CONTAINER_NAME_CAN1}):"
+    docker logs ${CONTAINER_NAME_CAN1}
     
     print_success "Local environment started!"
+    print_info "Containers: ${CONTAINER_NAME_CAN1} (can1)"
     print_info "Test with: kuksa-client grpc://127.0.0.1:55555"
     print_info "CAN monitoring PID: $CANDUMP_PID (saved to /tmp/candump.pid)"
 }
@@ -113,99 +115,107 @@ start_local() {
 # Start production k3s environment
 start_prod() {
     print_info "Starting production k3s environment..."
-    
+
     # Check if k3s is running
     if ! systemctl is-active --quiet k3s; then
         print_error "k3s service is not running"
         print_info "Start k3s with: sudo systemctl start k3s"
         exit 1
     fi
-    
+
     # Check if kubectl is available
     if ! command -v kubectl &> /dev/null; then
         print_error "kubectl not found"
         print_info "Make sure kubectl is installed and configured"
         exit 1
     fi
-    
-    # Determine which mirror job to use
-    local use_local_image=false
-    if docker image inspect dk_service_can_provider:latest >/dev/null 2>&1; then
-        print_info "Local image found: dk_service_can_provider:latest"
-        use_local_image=true
-    else
-        print_info "Local image not found, will use remote image from GHCR"
-        use_local_image=false
-    fi
-    
-    # Apply k3s manifests
-    if [ -d "manifests" ]; then
-        print_info "Applying k3s manifests..."
-        
-        # Apply appropriate mirror job
-        if [ "$use_local_image" = true ]; then
-            print_info "Using local image mirror job..."
-            kubectl apply -f manifests/mirror-local.yaml
-            JOB_NAME="mirror-dk-service-can-provider-local"
+
+    # Mirror local docker image to remote registry
+    if docker image inspect ${IMAGE_NAME}:latest >/dev/null 2>&1; then
+        print_info "Local image found: ${IMAGE_NAME}:latest"
+
+        # Convert underscores to hyphens for k8s job name (k8s doesn't allow underscores)
+        JOB_NAME=$(echo "mirror-${IMAGE_NAME}" | tr '_' '-')
+
+        # Mirror from docker daemon to 192.168.56.48:5000 using skopeo
+        print_info "Mirroring image to registry 192.168.56.48:5000..."
+        kubectl delete job ${JOB_NAME} --ignore-not-found=true >/dev/null 2>&1
+        sleep 2  # Give k8s time to fully delete the job
+        kubectl apply -f manifests/mirror/mirror-${IMAGE_NAME}.yaml
+
+        print_info "Waiting for mirror job to complete..."
+        if kubectl wait --for=condition=complete --timeout=120s job/${JOB_NAME} 2>/dev/null; then
+            print_success "Image mirrored to registry successfully"
         else
-            print_info "Using remote image mirror job..."
-            kubectl apply -f manifests/mirror-remote.yaml
-            JOB_NAME="mirror-dk-service-can-provider-remote"
-        fi
-        
-        # Wait for mirror job to complete
-        if [ ! -z "$JOB_NAME" ]; then
-            print_info "Waiting for mirror job ($JOB_NAME) to complete..."
-            kubectl wait --for=condition=complete --timeout=300s job/$JOB_NAME
-            
-            if [ $? -eq 0 ]; then
-                print_success "Mirror job completed successfully"
+            # Check if job completed anyway (handles case where wait times out on already-complete job)
+            JOB_STATUS=$(kubectl get job ${JOB_NAME} -o jsonpath='{.status.succeeded}' 2>/dev/null)
+            if [ "$JOB_STATUS" = "1" ]; then
+                print_success "Image mirrored to registry successfully"
             else
                 print_error "Mirror job failed or timed out"
-                kubectl logs job/$JOB_NAME
+                kubectl logs -l job-name=${JOB_NAME} --tail=50 2>/dev/null || true
                 exit 1
             fi
         fi
-        
-        # Apply deployment
-        if [ "$use_local_image" = true ]; then
-            print_info "Applying deployment..."
-            kubectl apply -f manifests/deployment-local.yaml
-            JOB_NAME="mirror-dk-service-can-provider-local"
+
+        # Verify image in registry
+        print_info "Verifying image in registry..."
+        if curl -s http://192.168.56.48:5000/v2/${IMAGE_NAME}/tags/list | grep -q "latest"; then
+            print_success "Image verified in registry: 192.168.56.48:5000/${IMAGE_NAME}:latest"
         else
-            print_info "Using remote image mirror job..."
-            kubectl apply -f manifests/deployment-remote.yaml
-            JOB_NAME="mirror-dk-service-can-provider-remote"
+            print_warning "Could not verify image in registry (curl check failed)"
         fi
+    else
+        print_error "Local image not found: ${IMAGE_NAME}:latest"
+        print_info "Build the image first with: ./build.sh"
+        exit 1
+    fi
+
+    # Apply k3s manifests
+    if [ -d "manifests" ]; then
+        print_info "Applying k3s manifests..."
+
+        # Delete existing deployment first
+        kubectl delete deployment dk-service-can-provider --ignore-not-found=true >/dev/null 2>&1
+
+        print_info "Deploying 2 containers: dk-service-can0-idps (can0) + dk-service-can1-engine (can1)"
+
+        # Apply service
+        kubectl apply -f manifests/service.yaml
+
+        # Apply deployment
+        kubectl apply -f manifests/deployment.yaml
 
         # Wait for deployment to be ready
         print_info "Waiting for deployment to be ready..."
-        kubectl wait --for=condition=available --timeout=300s deployment/dk-service-can-provider
-        
+        kubectl wait --for=condition=available --timeout=300s deployment/dk-service-can-provider 2>/dev/null
+
         if [ $? -eq 0 ]; then
             print_success "Deployment is ready"
         else
-            print_error "Deployment failed or timed out"
-            kubectl describe deployment dk-service-can-provider
-            exit 1
+            print_warning "Deployment wait timed out, checking pod status..."
+            kubectl get pods -l app=dk-service-can-provider
+            print_info "Check logs with: kubectl logs -l app=dk-service-can-provider"
         fi
-        
+
     else
         print_error "manifests directory not found"
         print_info "Make sure manifests/ directory exists with k3s YAML files"
         exit 1
     fi
-    
+
     print_success "Production environment started!"
-    
+
     # Show deployment status
     print_info "Deployment status:"
-    kubectl get deployments dk-service-can-provider
-    kubectl get pods -l app=dk-service-can-provider
-    
-    # Show logs
-    print_info "Recent logs:"
-    kubectl logs -l app=dk-service-can-provider --tail=20
+    kubectl get deployments dk-service-can-provider 2>/dev/null || print_warning "Deployment not found"
+    kubectl get pods -l app=dk-service-can-provider -o wide
+
+    # Show logs for both containers
+    print_info "Recent logs (dk-service-can0-idps):"
+    kubectl logs -l app=dk-service-can-provider -c dk-service-can0-idps --tail=15 2>/dev/null || print_warning "No logs available yet"
+    print_info "Recent logs (dk-service-can1-engine):"
+    kubectl logs -l app=dk-service-can-provider -c dk-service-can1-engine --tail=15 2>/dev/null || print_warning "No logs available yet"
 }
 
 # Import Docker image to k3s
@@ -236,15 +246,17 @@ show_status() {
     case $ENVIRONMENT in
         "local")
             print_info "Local environment status:"
-            if docker ps -q -f name=${CONTAINER_NAME} | grep -q .; then
-                print_success "Container is running"
-                docker ps -f name=${CONTAINER_NAME}
-                echo ""
-                print_info "Recent logs:"
-                docker logs --tail=10 ${CONTAINER_NAME}
-            else
-                print_warning "Container is not running"
-            fi
+            for CNAME in ${CONTAINER_NAME_CAN1}; do
+                if docker ps -q -f name=${CNAME} | grep -q .; then
+                    print_success "Container ${CNAME} is running"
+                    docker ps -f name=${CNAME}
+                    echo ""
+                    print_info "Recent logs (${CNAME}):"
+                    docker logs --tail=10 ${CNAME}
+                else
+                    print_warning "Container ${CNAME} is not running"
+                fi
+            done
             
             # Check CAN interface
             if ip link show vcan0 >/dev/null 2>&1; then
@@ -295,8 +307,9 @@ main() {
         exit 0
     fi
     
-    print_info "Starting dk_service_can_provider..."
+    print_info "Starting dk_service_can_provider (2 containers)..."
     print_info "Environment: $ENVIRONMENT"
+    print_info "Containers: dk-service-can0-idps (can0) + dk-service-can1-engine (can1)"
     
     # Handle import flag for production
     if [[ "$ENVIRONMENT" == "prod" ]] && [[ "$2" == "--import" ]]; then
