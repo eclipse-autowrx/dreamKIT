@@ -231,7 +231,11 @@ EOF
     fi
 
     # Install K3s with specific configuration for Jetson
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --node-name=xip --config /etc/rancher/k3s/config.yaml" sh -
+    # Pinned to the v1.34 branch: Kubernetes v1.35+ defaults kubelet's
+    # fail-cgroupv1 to true, which crash-loops on Jetson/L4T's default
+    # cgroup v1 hierarchy (see fix_k3s_cgroup_compat.sh for the full story).
+    # Override with K3S_VERSION=... if you need a different pinned release.
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="${K3S_VERSION:-v1.34.10+k3s1}" INSTALL_K3S_EXEC="server --node-name=xip --config /etc/rancher/k3s/config.yaml" sh -
 else
     echo -e "${BLUE}K3s server is already installed, skipping installation step...${NC}"
 fi
