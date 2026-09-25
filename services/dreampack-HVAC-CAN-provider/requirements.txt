@@ -1,0 +1,2 @@
+# Requirements for VSS mapping generation
+anytree>=2.9.0
