@@ -23,12 +23,16 @@ metadata:
   labels:
     app: dk-service-can-provider
 data:
-  # Configuration for the CAN service
-  can_interface: "can1"
+  # Configuration for the CAN service (1 container in one pod)
+  # dk_service_can_provider uses can1
   kuksa_address: "192.168.56.48"
   kuksa_port: "55555"
   mapping_file: "mapping/vss_4.0/vss_dbc.json"
   log_level: "INFO"
+  
+  # Container: dk_service_can_provider
+  can1_interface: "can1"
+  can1_name: "dk_service_can_provider"
   
   # DBC Configuration
   dbc_file: "ModelCAN.dbc"

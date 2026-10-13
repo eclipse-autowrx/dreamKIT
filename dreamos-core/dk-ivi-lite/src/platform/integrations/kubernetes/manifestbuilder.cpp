@@ -183,7 +183,7 @@ spec:
         kubernetes.io/hostname: ${node}
       hostNetwork: true
       restartPolicy: Always
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 15
       
       tolerations:
       - key: "node.kubernetes.io/unreachable"
@@ -201,15 +201,6 @@ spec:
         imagePullPolicy: IfNotPresent
         stdin: true
         tty: true
-        
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "1024Mi"
-            cpu: "300m"
-        
         env:
 ${env}
 ${args_section}

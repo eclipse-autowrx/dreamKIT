@@ -36,7 +36,6 @@ qt_add_executable(dk_ivi
     platform/integrations/kubernetes/manifestbuilder.cpp
     platform/integrations/kubernetes/installer.cpp
     platform/integrations/kubernetes/jobmanager.cpp
-    platform/integrations/vehicle-api/vapiclient.cpp
     platform/monitoring/wlanmonitor.cpp
     platform/monitoring/autorestartmanager.cpp
     platform/notifications/notificationmanager.cpp
@@ -131,7 +130,7 @@ message(STATUS "TARGET_ARCH: ${TARGET_ARCH}")
 # Create an imported target for libKuksaClient.so
 add_library(KuksaClient SHARED IMPORTED)
 # Replace the path below with the actual location of your libKuksaClient.so file.
-set_target_properties(KuksaClient PROPERTIES 
+set_target_properties(KuksaClient PROPERTIES
     IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/library/target/${TARGET_ARCH}/libKuksaClient.so"
 )
 
